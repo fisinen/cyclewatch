@@ -1,0 +1,22 @@
+{
+  "overview": "A cycle monitoring and management dashboard for Internet Computer canister operators — track multiple canisters, set alert thresholds, view burn-rate projections, and get email alerts when balances drop.",
+  "features": [
+    "Connect and monitor multiple canisters",
+    "Per-canister alert thresholds with email notifications",
+    "Burn-rate calculation from balance history snapshots",
+    "Days-remaining projection and depletion date",
+    "Top-up recommendations per canister",
+    "Unified dashboard with sort, filter, and total cycles summary",
+    "Controller-setup guidance with live polling",
+    "Dark-mode fintech design system"
+  ],
+  "category": "productivity",
+  "tags": [
+    "icp",
+    "cycles",
+    "monitoring",
+    "dashboard",
+    "canister-management"
+  ],
+  "last_updated": "2026-07-11T18:27:35.958Z"
+}

@@ -1,0 +1,100 @@
+// Version: 3.0.0
+type BalanceSnapshot__996305353 =
+  {
+    balance : Nat;
+    canisterId : CanisterId__139352140;
+    timestamp : Timestamp__301639476
+  };
+type CanisterId__139352140 = Principal;
+type Data__552063367<K, V> = {var count : Nat__93962160; kvs : [var ?(K, V)]};
+type Internal__455405067<K, V> =
+  {children : [var ?Node__279997185<K, V>]; data : Data__552063367<K, V>};
+type Leaf__114713147<K, V> = {data : Data__552063367<K, V>};
+type List__716101829<T> =
+  {
+    var blockIndex : Nat__93962160;
+    var blocks : [var [var ?T]];
+    var elementIndex : Nat__93962160
+  };
+type List__852723865<T> = List__716101829<T>;
+type Map__190625089<K, V> = Map__719753394<K, V>;
+type Map__246123559<K, V> = Map__190625089<K, V>;
+type Map__719753394<K, V> =
+  {var root : Node__279997185<K, V>; var size : Nat__93962160};
+type MonitoredCanister__261138750 =
+  {
+    alertEnabled : Bool;
+    canisterId : CanisterId__139352140;
+    connectedAt : Timestamp__301639476;
+    lastAlertSentAt : ?Timestamp__301639476;
+    thresholdCycles : Nat
+  };
+type Nat__920180692 = Nat;
+type Nat__93962160 = Nat__920180692;
+type Node__279997185<K, V> =
+  {#internal : Internal__455405067<K, V>; #leaf : Leaf__114713147<K, V>};
+type OldConnectedCanister__116625346 =
+  {canisterId : Principal; connectedAt : OldTimestamp__27916213};
+type OldExchangeRateState__751536715 =
+  {
+    var creditsPerTrillionCycles : Nat;
+    var updatedAt : OldTimestamp__27916213
+  };
+type OldFundingTransaction__532433399 =
+  {
+    createdAt : OldTimestamp__27916213;
+    creditsReceived : Nat;
+    cyclesAmount : Nat;
+    id : Nat;
+    status : {#confirmed; #failed : Text; #pending};
+    updatedAt : OldTimestamp__27916213;
+    userId : OldUserId__580276348
+  };
+type OldMap__30246564<K, V> =
+  {var root : OldNode__460320417<K, V>; var size : Nat};
+type OldNode__460320417<K, V> =
+  {
+    #internal :
+      {
+        children : [var ?OldNode__460320417<K, V>];
+        data : {var count : Nat; kvs : [var ?(K, V)]}
+      };
+    #leaf : {data : {var count : Nat; kvs : [var ?(K, V)]}}
+  };
+type OldTimestamp__27916213 = Int;
+type OldTransactions__109458218 =
+  {
+    var blockIndex : Nat;
+    var blocks : [var [var ?OldFundingTransaction__532433399]];
+    var elementIndex : Nat
+  };
+type OldUserId__580276348 = Principal;
+type Timestamp__301639476 = Int;
+type UserId__158757552 = Principal;
+actor ({
+  stable alertCooldownNanos : Int;
+  in caffeineAccounts : OldMap__30246564<OldUserId__580276348, Text>;
+  in connections :
+    OldMap__30246564<OldUserId__580276348, OldConnectedCanister__116625346>;
+  in creditBalances : OldMap__30246564<OldUserId__580276348, Nat>;
+  in exchangeRateState : OldExchangeRateState__751536715;
+  in nextTxId : [var Nat];
+  in transactions : OldTransactions__109458218
+}, {
+  stable alertCooldownNanos : Int;
+  stable monitored :
+    {
+      var root :
+        Node__279997185<UserId__158757552,
+                         Map__246123559<CanisterId__139352140,
+                                         MonitoredCanister__261138750>>;
+      var size : Nat__93962160
+    };
+  stable snapshots :
+    {
+      var root :
+        Node__279997185<CanisterId__139352140,
+                         List__852723865<BalanceSnapshot__996305353>>;
+      var size : Nat__93962160
+    }
+});

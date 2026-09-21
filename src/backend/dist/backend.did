@@ -1,0 +1,48 @@
+type Timestamp = int;
+type StatusResult = 
+ variant {
+   err: text;
+   ok: CanisterStatusInfo;
+ };
+type CanisterStatusInfo = 
+ record {
+   alertEnabled: bool;
+   balance: nat;
+   belowThreshold: bool;
+   canisterId: CanisterId;
+   controllers: vec principal;
+   lastChecked: Timestamp;
+   status: text;
+   threshold: nat;
+ };
+type CanisterId = principal;
+type BurnRateInfo = 
+ record {
+   cyclesPerDay: float64;
+   daysRemaining: float64;
+   projectedDepletionDate: Timestamp;
+   snapshotCount: nat;
+ };
+type BalanceSnapshot = 
+ record {
+   balance: nat;
+   canisterId: CanisterId;
+   timestamp: Timestamp;
+ };
+type BalanceResult = 
+ variant {
+   err: text;
+   ok: nat;
+ };
+service : {
+  connectCanister: (canisterId: text) -> ();
+  disconnectCanister: (canisterId: text) -> ();
+  getBackendCanisterId: () -> (text) query;
+  getBalanceHistory: (canisterId: text) -> (vec BalanceSnapshot);
+  getBurnRate: (canisterId: text) -> (BurnRateInfo);
+  getCanisterCycleBalance: (canisterId: text) -> (BalanceResult);
+  getCanisterStatus: (canisterId: text) -> (StatusResult);
+  getMonitoredCanisters: () -> (vec CanisterStatusInfo);
+  setAlertEnabled: (canisterId: text, enabled: bool) -> ();
+  setThreshold: (canisterId: text, thresholdCycles: nat) -> ();
+}

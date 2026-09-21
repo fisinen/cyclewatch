@@ -1,0 +1,176 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --font-display: "Space Grotesk";
+    --font-body: "DM Sans";
+    --font-mono: "Geist Mono";
+    --radius: 0.5rem;
+
+    --background: 0.96 0 0;
+    --foreground: 0.18 0 0;
+    --card: 0.99 0 0;
+    --card-foreground: 0.18 0 0;
+    --popover: 1.0 0 0;
+    --popover-foreground: 0.18 0 0;
+
+    --primary: 0.42 0.095 285;
+    --primary-foreground: 0.98 0 0;
+
+    --secondary: 0.5 0.01 280;
+    --secondary-foreground: 0.25 0 0;
+    --muted: 0.92 0 0;
+    --muted-foreground: 0.52 0 0;
+
+    --accent: 0.65 0.17 165;
+    --accent-foreground: 0.98 0 0;
+
+    --destructive: 0.55 0.22 25;
+    --destructive-foreground: 0.98 0 0;
+
+    --border: 0.88 0 0;
+    --input: 0.92 0 0;
+    --ring: 0.42 0.095 285;
+
+    --chart-1: 0.65 0.17 165;
+    --chart-2: 0.42 0.095 285;
+    --chart-3: 0.5 0.01 280;
+    --chart-4: 0.72 0.15 50;
+    --chart-5: 0.58 0.12 0;
+
+    --sidebar: 0.99 0 0;
+    --sidebar-foreground: 0.18 0 0;
+    --sidebar-primary: 0.42 0.095 285;
+    --sidebar-primary-foreground: 0.98 0 0;
+    --sidebar-accent: 0.92 0 0;
+    --sidebar-accent-foreground: 0.28 0 0;
+    --sidebar-border: 0.88 0 0;
+    --sidebar-ring: 0.42 0.095 285;
+
+    --status-healthy: 0.92 0.13 165;
+    --status-healthy-foreground: 0.28 0.1 165;
+    --status-warning: 0.92 0.14 75;
+    --status-warning-foreground: 0.32 0.11 75;
+    --status-critical: 0.92 0.16 25;
+    --status-critical-foreground: 0.32 0.14 25;
+    --status-stopped: 0.92 0.005 280;
+    --status-stopped-foreground: 0.3 0.01 280;
+
+    --chart-line: 0.42 0.095 285;
+    --chart-area: 0.68 0.12 280;
+    --chart-grid: 0.88 0 0;
+  }
+
+  .dark {
+    --background: 0.12 0 0;
+    --foreground: 0.94 0 0;
+    --card: 0.16 0 0;
+    --card-foreground: 0.94 0 0;
+    --popover: 0.2 0 0;
+    --popover-foreground: 0.94 0 0;
+
+    --primary: 0.68 0.12 280;
+    --primary-foreground: 0.12 0 0;
+
+    --secondary: 0.28 0.01 280;
+    --secondary-foreground: 0.82 0 0;
+    --muted: 0.2 0 0;
+    --muted-foreground: 0.58 0 0;
+
+    --accent: 0.72 0.18 165;
+    --accent-foreground: 0.12 0 0;
+
+    --destructive: 0.62 0.24 25;
+    --destructive-foreground: 0.12 0 0;
+
+    --border: 0.24 0 0;
+    --input: 0.24 0 0;
+    --ring: 0.72 0.18 165;
+
+    --chart-1: 0.72 0.18 165;
+    --chart-2: 0.68 0.12 280;
+    --chart-3: 0.28 0.01 280;
+    --chart-4: 0.62 0.2 50;
+    --chart-5: 0.48 0.15 0;
+
+    --sidebar: 0.16 0 0;
+    --sidebar-foreground: 0.94 0 0;
+    --sidebar-primary: 0.68 0.12 280;
+    --sidebar-primary-foreground: 0.12 0 0;
+    --sidebar-accent: 0.2 0 0;
+    --sidebar-accent-foreground: 0.82 0 0;
+    --sidebar-border: 0.24 0 0;
+    --sidebar-ring: 0.72 0.18 165;
+
+    --status-healthy: 0.28 0.12 165;
+    --status-healthy-foreground: 0.86 0.16 165;
+    --status-warning: 0.32 0.13 75;
+    --status-warning-foreground: 0.88 0.15 75;
+    --status-critical: 0.34 0.16 25;
+    --status-critical-foreground: 0.88 0.17 25;
+    --status-stopped: 0.24 0.01 280;
+    --status-stopped-foreground: 0.68 0.01 280;
+
+    --chart-line: 0.72 0.18 165;
+    --chart-area: 0.42 0.095 285;
+    --chart-grid: 0.24 0 0;
+  }
+
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground font-body antialiased;
+  }
+}
+
+@font-face {
+  font-family: "Space Grotesk";
+  src: url("/assets/fonts/SpaceGrotesk.woff2") format("woff2");
+  font-weight: 400 700;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "DM Sans";
+  src: url("/assets/fonts/DMSans.woff2") format("woff2");
+  font-weight: 400 600 700;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Geist Mono";
+  src: url("/assets/fonts/GeistMono.woff2") format("woff2");
+  font-weight: 400 600;
+  font-display: swap;
+}
+
+@layer utilities {
+  .transition-smooth {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .text-balance {
+    text-wrap: balance;
+  }
+  .status-badge {
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-smooth;
+  }
+  .status-healthy {
+    background: oklch(var(--status-healthy));
+    color: oklch(var(--status-healthy-foreground));
+  }
+  .status-warning {
+    background: oklch(var(--status-warning));
+    color: oklch(var(--status-warning-foreground));
+  }
+  .status-critical {
+    background: oklch(var(--status-critical));
+    color: oklch(var(--status-critical-foreground));
+  }
+  .status-stopped {
+    background: oklch(var(--status-stopped));
+    color: oklch(var(--status-stopped-foreground));
+  }
+}
