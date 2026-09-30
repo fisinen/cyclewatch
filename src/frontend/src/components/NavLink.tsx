@@ -25,15 +25,15 @@ export function NavLink({
   return (
     <Link
       to={to}
-      data-ocid={`nav-link-${label.toLowerCase()}`}
+      data-ocid={`nav-link-${label.toLowerCase().replace(/\s+/g, "-")}`}
       title={collapsed ? label : undefined}
       aria-label={collapsed ? label : undefined}
       onClick={onNavigate}
       className={cn(
-        "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
-        "hover:bg-primary/10 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+        "group flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-smooth",
+        "hover:bg-surface-hover hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
         isActive
-          ? "bg-primary/15 text-primary shadow-sm"
+          ? "bg-primary/15 text-primary"
           : "text-muted-foreground hover:text-foreground",
         collapsed && "justify-center px-2",
       )}

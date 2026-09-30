@@ -33,6 +33,18 @@ export default {
           DEFAULT: "oklch(var(--destructive) / <alpha-value>)",
           foreground: "oklch(var(--destructive-foreground))",
         },
+        success: {
+          DEFAULT: "oklch(var(--success) / <alpha-value>)",
+          foreground: "oklch(var(--success-foreground))",
+        },
+        warning: {
+          DEFAULT: "oklch(var(--warning) / <alpha-value>)",
+          foreground: "oklch(var(--warning-foreground))",
+        },
+        info: {
+          DEFAULT: "oklch(var(--info) / <alpha-value>)",
+          foreground: "oklch(var(--info-foreground))",
+        },
         muted: {
           DEFAULT: "oklch(var(--muted) / <alpha-value>)",
           foreground: "oklch(var(--muted-foreground) / <alpha-value>)",
@@ -49,6 +61,10 @@ export default {
           DEFAULT: "oklch(var(--card))",
           foreground: "oklch(var(--card-foreground))",
         },
+        "surface-inset": "oklch(var(--surface-inset))",
+        "surface-raised": "oklch(var(--surface-raised))",
+        "surface-hover": "oklch(var(--surface-hover))",
+        track: "oklch(var(--track))",
         chart: {
           1: "oklch(var(--chart-1))",
           2: "oklch(var(--chart-2))",
@@ -79,9 +95,10 @@ export default {
       },
       boxShadow: {
         xs: "0 1px 2px 0 rgba(0,0,0,0.05)",
-        subtle: "0 1px 3px 0 rgba(0,0,0,0.08), 0 1px 2px -1px rgba(0,0,0,0.08)",
-        elevated: "0 4px 12px -2px rgba(0,0,0,0.18), 0 2px 6px -2px rgba(0,0,0,0.12)",
-        "card-hover": "0 12px 24px -6px rgba(0,0,0,0.28), 0 4px 10px -4px rgba(0,0,0,0.18)",
+        subtle: "0 1px 2px 0 rgba(0,0,0,0.06)",
+        "card-light": "0 1px 2px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)",
+        "card-dark": "0 1px 2px rgba(0,0,0,0.4), 0 2px 8px rgba(0,0,0,0.28)",
+        elevated: "0 8px 24px -8px rgba(0,0,0,0.35)",
       },
       keyframes: {
         "accordion-down": {
@@ -92,25 +109,25 @@ export default {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: "0" },
         },
-        "chart-draw": {
-          from: { "stroke-dashoffset": "100%" },
-          to: { "stroke-dashoffset": "0" },
+        "pulse-live": {
+          "0%, 100%": { opacity: "1" },
+          "50%": { opacity: "0.45" },
         },
-        "fade-in": {
-          from: { opacity: "0" },
-          to: { opacity: "1" },
-        },
-        "slide-up": {
-          from: { opacity: "0", transform: "translateY(8px)" },
+        "fade-in-up": {
+          from: { opacity: "0", transform: "translateY(6px)" },
           to: { opacity: "1", transform: "translateY(0)" },
+        },
+        "bar-grow": {
+          from: { transform: "scaleX(0)" },
+          to: { transform: "scaleX(1)" },
         },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
-        "chart-draw": "chart-draw 0.8s ease-out forwards",
-        "fade-in": "fade-in 0.3s ease-out forwards",
-        "slide-up": "slide-up 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards",
+        "pulse-live": "pulse-live 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+        "fade-in-up": "fade-in-up 0.35s cubic-bezier(0.16, 1, 0.3, 1) both",
+        "bar-grow": "bar-grow 0.6s cubic-bezier(0.16, 1, 0.3, 1) both",
       },
     },
   },

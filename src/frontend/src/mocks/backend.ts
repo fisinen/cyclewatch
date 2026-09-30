@@ -1,192 +1,145 @@
 import type { Principal } from "@icp-sdk/core/principal";
 import type { backendInterface } from "../backend";
 
-// Mock principal factory — mimics the Principal.toText() shape used by bindgen.
+const now = BigInt(Date.now()) * BigInt(1_000_000);
+const DAY_NS = BigInt(86_400_000_000_000);
+
+/** Minimal Principal stand-in for mock data — only `toText` is consumed. */
 function mockPrincipal(text: string): Principal {
-  return { toString: () => text, toText: () => text } as unknown as Principal;
+  return { toText: () => text } as unknown as Principal;
 }
 
-const NS = BigInt(1_000_000);
-const now = () => BigInt(Date.now()) * NS;
-const minutes = (m: number) => BigInt(m * 60_000) * NS;
-const hours = (h: number) => BigInt(h * 3_600_000) * NS;
-const days = (d: number) => BigInt(d * 86_400_000) * NS;
+const LEDGER = "ryjl3-tyaaa-aaaaa-aaab-cai";
+const GOVERNANCE = "rrkah-fqaaa-aaaaa-aaaaq-cai";
+const INTERNET_IDENTITY = "rdmx6-jaaaa-aaaaa-aaadq-cai";
 
-const T = BigInt(1_000_000_000_000);
-
-// ─── Seed canister data ──────────────────────────────────────────────────────
-
-const CANISTER_IDS = [
-  "rrkah-fqaaa-aaaaa-aaaaq-cai",
-  "ryjl3-tyaaa-aaaaa-aaaba-cai",
-  "qaa6y-5yaaa-aaaaa-aaaab-cai",
-  "qjdve-lqaaa-aaaaa-aaaeq-cai",
-  "u4bso-2qaaa-aaaaa-aaaba-cai",
+const MOCK_CANISTERS = [
+  { canisterId: LEDGER, addedAt: now - DAY_NS * BigInt(12) },
+  { canisterId: GOVERNANCE, addedAt: now - DAY_NS * BigInt(9) },
+  { canisterId: INTERNET_IDENTITY, addedAt: now - DAY_NS * BigInt(4) },
 ];
 
-interface SeedCanister {
-  canisterId: string;
-  balance: bigint;
-  status: string;
-  threshold: bigint;
-  alertEnabled: boolean;
-  belowThreshold: boolean;
-  lastChecked: bigint;
-  controllers: string[];
+const MOCK_RESOURCES: Record<
+  string,
+  {
+    cycleBalance: bigint;
+    burnRateCyclesPerDay: bigint;
+    runwayDays: bigint;
+    heapBytes: bigint;
+    stableBytes: bigint;
+    wasmBytes: bigint;
+    computeAllocation: bigint;
+    memoryAllocation: bigint;
+    freezingThreshold: bigint;
+  }
+> = {
+  [LEDGER]: {
+    cycleBalance: BigInt(6_180_000_000_000),
+    burnRateCyclesPerDay: BigInt(53_400_000_000),
+    runwayDays: BigInt(118),
+    heapBytes: BigInt(1_288_490_188),
+    stableBytes: BigInt(536_870_912),
+    wasmBytes: BigInt(67_108_864),
+    computeAllocation: BigInt(100),
+    memoryAllocation: BigInt(4_294_967_296),
+    freezingThreshold: BigInt(1_048_576),
+  },
+  [GOVERNANCE]: {
+    cycleBalance: BigInt(2_180_000_000_000),
+    burnRateCyclesPerDay: BigInt(44_400_000_000),
+    runwayDays: BigInt(49),
+    heapBytes: BigInt(1_073_741_824),
+    stableBytes: BigInt(268_435_456),
+    wasmBytes: BigInt(33_554_432),
+    computeAllocation: BigInt(50),
+    memoryAllocation: BigInt(2_147_483_648),
+    freezingThreshold: BigInt(524_288),
+  },
+  [INTERNET_IDENTITY]: {
+    cycleBalance: BigInt(1_180_000_000_000),
+    burnRateCyclesPerDay: BigInt(65_500_000_000),
+    runwayDays: BigInt(18),
+    heapBytes: BigInt(805_306_368),
+    stableBytes: BigInt(134_217_728),
+    wasmBytes: BigInt(16_777_216),
+    computeAllocation: BigInt(25),
+    memoryAllocation: BigInt(1_073_741_824),
+    freezingThreshold: BigInt(262_144),
+  },
+};
+
+const MOCK_STATUS: Record<string, "running" | "stopping" | "stopped"> = {
+  [LEDGER]: "running",
+  [GOVERNANCE]: "stopping",
+  [INTERNET_IDENTITY]: "stopped",
+};
+
+function resourcesFor(canisterId: string) {
+  const r = MOCK_RESOURCES[canisterId] ?? MOCK_RESOURCES[LEDGER];
+  return {
+    cycleBalance: r.cycleBalance,
+    burnRateCyclesPerDay: r.burnRateCyclesPerDay,
+    runwayDays: r.runwayDays,
+    settings: {
+      computeAllocation: r.computeAllocation,
+      memoryAllocation: r.memoryAllocation,
+      freezingThreshold: r.freezingThreshold,
+    },
+    memory: {
+      heapBytes: r.heapBytes,
+      stableBytes: r.stableBytes,
+      wasmBytes: r.wasmBytes,
+    },
+  };
 }
-
-function buildSeed(): SeedCanister[] {
-  const t = now();
-  return [
-    {
-      canisterId: CANISTER_IDS[0],
-      balance: BigInt(5_230) * T,
-      status: "running",
-      threshold: BigInt(1_000) * T,
-      alertEnabled: true,
-      belowThreshold: false,
-      lastChecked: t - minutes(2),
-      controllers: [CANISTER_IDS[0]],
-    },
-    {
-      canisterId: CANISTER_IDS[1],
-      balance: BigInt(820) * T,
-      status: "running",
-      threshold: BigInt(1_000) * T,
-      alertEnabled: true,
-      belowThreshold: true,
-      lastChecked: t - minutes(5),
-      controllers: [CANISTER_IDS[1]],
-    },
-    {
-      canisterId: CANISTER_IDS[2],
-      balance: BigInt(12_400) * T,
-      status: "running",
-      threshold: BigInt(2_000) * T,
-      alertEnabled: false,
-      belowThreshold: false,
-      lastChecked: t - minutes(1),
-      controllers: [CANISTER_IDS[2]],
-    },
-    {
-      canisterId: CANISTER_IDS[3],
-      balance: BigInt(0),
-      status: "stopped",
-      threshold: BigInt(500) * T,
-      alertEnabled: true,
-      belowThreshold: true,
-      lastChecked: t - hours(1),
-      controllers: [CANISTER_IDS[3]],
-    },
-    {
-      canisterId: CANISTER_IDS[4],
-      balance: BigInt(1_540) * T,
-      status: "running",
-      threshold: BigInt(1_500) * T,
-      alertEnabled: true,
-      belowThreshold: false,
-      lastChecked: t - minutes(8),
-      controllers: [CANISTER_IDS[4]],
-    },
-  ];
-}
-
-const seed = buildSeed();
-
-function findSeed(canisterId: string): SeedCanister | undefined {
-  return seed.find((c) => c.canisterId === canisterId);
-}
-
-// ─── Balance history snapshots (descending) ──────────────────────────────────
-
-function buildHistory(canisterId: string): Array<{
-  balance: bigint;
-  timestamp: bigint;
-  canisterId: Principal;
-}> {
-  const c = findSeed(canisterId);
-  const base = c?.balance ?? BigInt(0);
-  const t = now();
-  return Array.from({ length: 12 }, (_, i) => ({
-    balance: base + BigInt(i * 50) * T,
-    timestamp: t - hours(i * 6),
-    canisterId: mockPrincipal(canisterId),
-  }));
-}
-
-// ─── Mock backend implementation ──────────────────────────────────────────────
 
 export const mockBackend: backendInterface = {
-  connectCanister: async (_canisterId: string) => undefined,
-
-  disconnectCanister: async (_canisterId: string) => undefined,
-
-  getBackendCanisterId: async () => "rrkah-fqaaa-aaaaa-aaaaq-cai",
-
-  getMonitoredCanisters: async () =>
-    seed.map((c) => ({
+  addCanister: async (_canisterId: string) => undefined,
+  removeCanister: async (_canisterId: string) => undefined,
+  listManagedCanisters: async () =>
+    MOCK_CANISTERS.map((c) => ({
       canisterId: mockPrincipal(c.canisterId),
-      balance: c.balance,
-      status: c.status,
-      controllers: c.controllers.map((id) => mockPrincipal(id)),
-      lastChecked: c.lastChecked,
-      threshold: c.threshold,
-      alertEnabled: c.alertEnabled,
-      belowThreshold: c.belowThreshold,
+      addedAt: c.addedAt,
     })),
-
+  setActiveCanister: async (_canisterId: string) => undefined,
+  getActiveCanister: async () => mockPrincipal(LEDGER),
+  getCanisterCycleBalance: async (canisterId: string) => ({
+    __kind__: "ok" as const,
+    ok: resourcesFor(canisterId).cycleBalance,
+  }),
+  getCanisterResources: async (canisterId: string) => ({
+    __kind__: "ok" as const,
+    ok: resourcesFor(canisterId),
+  }),
   getCanisterStatus: async (canisterId: string) => {
-    const c = findSeed(canisterId);
-    if (!c) {
-      return {
-        __kind__: "err" as const,
-        err: `Canister ${canisterId} is not connected. Call connectCanister first.`,
-      };
-    }
+    const status = MOCK_STATUS[canisterId] ?? "running";
     return {
       __kind__: "ok" as const,
       ok: {
-        canisterId: mockPrincipal(c.canisterId),
-        balance: c.balance,
-        status: c.status,
-        controllers: c.controllers.map((id) => mockPrincipal(id)),
-        lastChecked: c.lastChecked,
-        threshold: c.threshold,
-        alertEnabled: c.alertEnabled,
-        belowThreshold: c.belowThreshold,
+        canisterId: mockPrincipal(canisterId),
+        status:
+          status === "running"
+            ? ({ __kind__: "running", running: null } as const)
+            : status === "stopping"
+              ? ({ __kind__: "stopping", stopping: null } as const)
+              : ({ __kind__: "stopped", stopped: null } as const),
+        controllers: ["rrkah-fqaaa-aaaaa-aaaaq-cai"],
+        resources: resourcesFor(canisterId),
       },
     };
   },
-
-  getCanisterCycleBalance: async (canisterId: string) => {
-    const c = findSeed(canisterId);
-    if (!c) {
-      return {
-        __kind__: "err" as const,
-        err: `Canister ${canisterId} is not connected.`,
-      };
-    }
-    return { __kind__: "ok" as const, ok: c.balance };
-  },
-
-  getBalanceHistory: async (canisterId: string) => buildHistory(canisterId),
-
-  getBurnRate: async (canisterId: string) => {
-    const c = findSeed(canisterId);
-    const balance = c?.balance ?? BigInt(0);
-    const cyclesPerDay = 2_000_000_000_000; // 2T cycles/day
-    const balanceNum = Number(balance);
-    const daysRemaining =
-      cyclesPerDay > 0 ? balanceNum / cyclesPerDay : 0;
-    return {
-      cyclesPerDay,
-      daysRemaining,
-      projectedDepletionDate: now() + days(30),
-      snapshotCount: BigInt(12),
-    };
-  },
-
-  setThreshold: async (_canisterId: string, _thresholdCycles: bigint) => {},
-
-  setAlertEnabled: async (_canisterId: string, _enabled: boolean) => {},
+  getIcpToCyclesRate: async () => ({
+    // 1e9-scaled ICP-per-XDR: 10_000_000_000 / 7142 ≈ 1_400_168
+    // (xdr_permyriad_per_icp ≈ 7142 → ~0.7142 TC per ICP).
+    icpPerXdr: BigInt(1_400_168),
+    updatedAt: now,
+  }),
+  refreshIcpToCyclesRate: async () => ({
+    icpPerXdr: BigInt(1_400_168),
+    updatedAt: now,
+  }),
+  getBackendCanisterId: async () => "rrkah-fqaaa-aaaaa-aaaaq-cai",
+  getApiDoc: async () => "CycleWatch backend API",
+  schema: async () => "{}",
+  execute: async (_qJson: string) => ({ hasMore: false, rows: [] }),
 };

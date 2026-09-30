@@ -5,24 +5,27 @@ import { useInternetIdentity } from "@caffeineai/core-infrastructure";
 import { Outlet } from "@tanstack/react-router";
 
 import {
+  Activity,
   Check,
   ChevronLeft,
   ChevronRight,
   Copy,
   LayoutDashboard,
+  Link,
   LogOut,
   Menu,
   Moon,
   Sun,
   X,
-  Zap,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useState } from "react";
 import { NavLink } from "./NavLink";
 
 const NAV_ITEMS = [
-  { to: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
+  { to: "/dashboard", icon: LayoutDashboard, label: "Canisters" },
+  { to: "/activity", icon: Activity, label: "Activity" },
+  { to: "/account", icon: Link, label: "Account" },
 ];
 
 function truncatePrincipal(principal: string): string {
@@ -93,12 +96,12 @@ export function Layout() {
             isCollapsed ? "justify-center" : "gap-2.5",
           )}
         >
-          <div className="w-8 h-8 rounded-lg bg-primary/20 border border-primary/30 flex items-center justify-center shrink-0">
-            <Zap size={16} className="text-primary" />
+          <div className="w-8 h-8 rounded-md bg-primary/20 border border-primary/30 flex items-center justify-center shrink-0">
+            <Activity size={16} className="text-primary" />
           </div>
           {!isCollapsed && (
             <span className="text-base font-display font-semibold text-foreground whitespace-nowrap overflow-hidden">
-              Cycle<span className="text-primary">Watch</span>
+              Cycle<span className="text-accent">Watch</span>
             </span>
           )}
         </div>
@@ -126,8 +129,8 @@ export function Layout() {
             )}
           >
             {!isCollapsed && (
-              <div className="bg-muted/60 rounded-lg px-3 py-2">
-                <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide mb-1">
+              <div className="surface-inset px-3 py-2">
+                <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest mb-1">
                   Principal
                 </p>
                 <div className="flex items-center gap-1.5">
@@ -156,7 +159,7 @@ export function Layout() {
               onClick={() => clear()}
               data-ocid="logout-btn"
               className={cn(
-                "text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-smooth",
+                "text-muted-foreground hover:text-foreground hover:bg-surface-hover transition-smooth",
                 isCollapsed
                   ? "w-9 h-9 p-0 justify-center"
                   : "w-full justify-start gap-2 text-xs",
@@ -190,7 +193,7 @@ export function Layout() {
             onClick={() => setCollapsed((c) => !c)}
             aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
             data-ocid="sidebar-toggle"
-            className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-smooth"
+            className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-surface-hover transition-smooth"
           >
             {collapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
           </button>
@@ -228,7 +231,7 @@ export function Layout() {
                 onClick={() => setDrawerOpen(false)}
                 aria-label="Close navigation"
                 data-ocid="drawer-close-btn"
-                className="absolute top-4 right-3 p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-smooth z-10"
+                className="absolute top-4 right-3 p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-surface-hover transition-smooth z-10"
               >
                 <X size={16} />
               </button>
@@ -242,7 +245,7 @@ export function Layout() {
       {/* Main content */}
       <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
         {/* Top bar */}
-        <header className="h-16 bg-card border-b border-border flex items-center justify-between px-3 sm:px-6 shrink-0 shadow-sm">
+        <header className="h-16 bg-card border-b border-border flex items-center justify-between px-3 sm:px-6 shrink-0 shadow-subtle">
           <div className="flex items-center gap-2 min-w-0">
             {/* Hamburger — mobile only */}
             <button
@@ -250,7 +253,7 @@ export function Layout() {
               onClick={() => setDrawerOpen(true)}
               aria-label="Open navigation"
               data-ocid="hamburger-btn"
-              className="p-2 -ml-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-smooth md:hidden shrink-0"
+              className="p-2 -ml-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-surface-hover transition-smooth md:hidden shrink-0"
             >
               <Menu size={18} />
             </button>
@@ -273,7 +276,7 @@ export function Layout() {
                 isDark ? "Switch to light mode" : "Switch to dark mode"
               }
               data-ocid="dark-mode-toggle"
-              className="p-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-smooth"
+              className="p-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-surface-hover transition-smooth"
             >
               {isDark ? <Sun size={16} /> : <Moon size={16} />}
             </button>
@@ -298,26 +301,19 @@ export function Layout() {
           <Outlet />
         </main>
 
-        {/* Footer — backend canister ID + controller-setup reminder */}
-        <footer className="bg-muted/40 border-t border-border px-4 py-2.5 shrink-0">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-1.5 sm:gap-4">
-            <p className="text-[11px] text-muted-foreground text-center sm:text-left">
-              © {currentYear}.{" "}
-              <a
-                href={caffeineUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:text-foreground transition-colors duration-200"
-              >
-                Built with love using caffeine.ai
-              </a>
-            </p>
-            <p className="text-[11px] text-muted-foreground text-center sm:text-right">
-              Backend canister ID changes on redeploy — re-add it as a
-              controller of your target canisters and reconnect after each
-              redeploy.
-            </p>
-          </div>
+        {/* Footer */}
+        <footer className="h-10 bg-muted/40 border-t border-border flex items-center justify-center px-4 shrink-0">
+          <p className="text-xs text-muted-foreground">
+            © {currentYear}.{" "}
+            <a
+              href={caffeineUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-foreground transition-colors duration-200"
+            >
+              Built with love using caffeine.ai
+            </a>
+          </p>
         </footer>
       </div>
     </div>

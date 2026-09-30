@@ -1,48 +1,94 @@
-type Timestamp = int;
-type StatusResult = 
+type Value = 
  variant {
-   err: text;
-   ok: CanisterStatusInfo;
+   "bool": bool;
+   float: float64;
+   "int": int;
+   "nat": nat;
+   "null";
+   "text": text;
+ };
+type Timestamp = int;
+type Result = 
+ record {
+   hasMore: bool;
+   rows: vec vec Cell;
+ };
+type MemoryBreakdown = 
+ record {
+   heapBytes: nat;
+   stableBytes: nat;
+   wasmBytes: nat;
+ };
+type ManagedCanister = 
+ record {
+   addedAt: Timestamp;
+   canisterId: CanisterId;
+ };
+type IcpToCyclesRate = 
+ record {
+   icpPerXdr: nat;
+   updatedAt: Timestamp;
+ };
+type Cycles = nat;
+type Cell = 
+ record {
+   name: text;
+   value: Value;
  };
 type CanisterStatusInfo = 
  record {
-   alertEnabled: bool;
-   balance: nat;
-   belowThreshold: bool;
    canisterId: CanisterId;
-   controllers: vec principal;
-   lastChecked: Timestamp;
-   status: text;
-   threshold: nat;
+   controllers: vec text;
+   resources: CanisterResources;
+   status: CanisterStatus;
+ };
+type CanisterStatus = 
+ variant {
+   running;
+   stopped;
+   stopping;
+   unknown: text;
+ };
+type CanisterSettings = 
+ record {
+   computeAllocation: nat;
+   freezingThreshold: nat;
+   memoryAllocation: nat;
+ };
+type CanisterResources = 
+ record {
+   burnRateCyclesPerDay: nat;
+   cycleBalance: Cycles;
+   memory: MemoryBreakdown;
+   runwayDays: nat;
+   settings: CanisterSettings;
  };
 type CanisterId = principal;
-type BurnRateInfo = 
- record {
-   cyclesPerDay: float64;
-   daysRemaining: float64;
-   projectedDepletionDate: Timestamp;
-   snapshotCount: nat;
- };
-type BalanceSnapshot = 
- record {
-   balance: nat;
-   canisterId: CanisterId;
-   timestamp: Timestamp;
- };
-type BalanceResult = 
- variant {
-   err: text;
-   ok: nat;
- };
 service : {
-  connectCanister: (canisterId: text) -> ();
-  disconnectCanister: (canisterId: text) -> ();
+  addCanister: (canisterId: text) -> ();
+  execute: (qJson: text) -> (Result) query;
+  getActiveCanister: () -> (opt CanisterId) query;
+  getApiDoc: () -> (text) query;
   getBackendCanisterId: () -> (text) query;
-  getBalanceHistory: (canisterId: text) -> (vec BalanceSnapshot);
-  getBurnRate: (canisterId: text) -> (BurnRateInfo);
-  getCanisterCycleBalance: (canisterId: text) -> (BalanceResult);
-  getCanisterStatus: (canisterId: text) -> (StatusResult);
-  getMonitoredCanisters: () -> (vec CanisterStatusInfo);
-  setAlertEnabled: (canisterId: text, enabled: bool) -> ();
-  setThreshold: (canisterId: text, thresholdCycles: nat) -> ();
+  getCanisterCycleBalance: (canisterId: text) ->
+   (variant {
+      err: text;
+      ok: nat;
+    });
+  getCanisterResources: (canisterId: text) ->
+   (variant {
+      err: text;
+      ok: CanisterResources;
+    });
+  getCanisterStatus: (canisterId: text) ->
+   (variant {
+      err: text;
+      ok: CanisterStatusInfo;
+    });
+  getIcpToCyclesRate: () -> (IcpToCyclesRate) query;
+  listManagedCanisters: () -> (vec ManagedCanister) query;
+  refreshIcpToCyclesRate: () -> (IcpToCyclesRate);
+  removeCanister: (canisterId: text) -> ();
+  schema: () -> (text) query;
+  setActiveCanister: (canisterId: text) -> ();
 }

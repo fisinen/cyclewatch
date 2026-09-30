@@ -30,14 +30,32 @@
     --destructive: 0.55 0.22 25;
     --destructive-foreground: 0.98 0 0;
 
+    --success: 0.58 0.16 155;
+    --success-foreground: 0.98 0 0;
+    --warning: 0.68 0.15 75;
+    --warning-foreground: 0.2 0.03 75;
+    --info: 0.55 0.11 250;
+    --info-foreground: 0.98 0 0;
+
     --border: 0.88 0 0;
     --input: 0.92 0 0;
     --ring: 0.42 0.095 285;
 
-    --chart-1: 0.65 0.17 165;
-    --chart-2: 0.42 0.095 285;
-    --chart-3: 0.5 0.01 280;
-    --chart-4: 0.72 0.15 50;
+    /* Data-dense dashboard surfaces */
+    --surface-inset: 0.93 0.004 280;
+    --surface-raised: 1.0 0 0;
+    --surface-hover: 0.95 0.006 280;
+    --track: 0.9 0.004 280;
+
+    /* Memory proportion segments (heap / stable / wasm) */
+    --memory-heap: 0.62 0.14 285;
+    --memory-stable: 0.66 0.15 165;
+    --memory-wasm: 0.7 0.14 65;
+
+    --chart-1: 0.62 0.14 285;
+    --chart-2: 0.66 0.15 165;
+    --chart-3: 0.7 0.14 65;
+    --chart-4: 0.55 0.11 250;
     --chart-5: 0.58 0.12 0;
 
     --sidebar: 0.99 0 0;
@@ -48,74 +66,66 @@
     --sidebar-accent-foreground: 0.28 0 0;
     --sidebar-border: 0.88 0 0;
     --sidebar-ring: 0.42 0.095 285;
-
-    --status-healthy: 0.92 0.13 165;
-    --status-healthy-foreground: 0.28 0.1 165;
-    --status-warning: 0.92 0.14 75;
-    --status-warning-foreground: 0.32 0.11 75;
-    --status-critical: 0.92 0.16 25;
-    --status-critical-foreground: 0.32 0.14 25;
-    --status-stopped: 0.92 0.005 280;
-    --status-stopped-foreground: 0.3 0.01 280;
-
-    --chart-line: 0.42 0.095 285;
-    --chart-area: 0.68 0.12 280;
-    --chart-grid: 0.88 0 0;
   }
 
   .dark {
-    --background: 0.12 0 0;
-    --foreground: 0.94 0 0;
-    --card: 0.16 0 0;
-    --card-foreground: 0.94 0 0;
-    --popover: 0.2 0 0;
-    --popover-foreground: 0.94 0 0;
+    --background: 0.13 0.006 285;
+    --foreground: 0.94 0.004 285;
+    --card: 0.17 0.008 285;
+    --card-foreground: 0.94 0.004 285;
+    --popover: 0.21 0.008 285;
+    --popover-foreground: 0.94 0.004 285;
 
     --primary: 0.68 0.12 280;
-    --primary-foreground: 0.12 0 0;
+    --primary-foreground: 0.13 0.006 285;
 
-    --secondary: 0.28 0.01 280;
-    --secondary-foreground: 0.82 0 0;
-    --muted: 0.2 0 0;
-    --muted-foreground: 0.58 0 0;
+    --secondary: 0.28 0.012 285;
+    --secondary-foreground: 0.82 0.004 285;
+    --muted: 0.21 0.008 285;
+    --muted-foreground: 0.62 0.008 285;
 
     --accent: 0.72 0.18 165;
-    --accent-foreground: 0.12 0 0;
+    --accent-foreground: 0.13 0.006 285;
 
     --destructive: 0.62 0.24 25;
-    --destructive-foreground: 0.12 0 0;
+    --destructive-foreground: 0.13 0.006 285;
 
-    --border: 0.24 0 0;
-    --input: 0.24 0 0;
+    --success: 0.72 0.17 155;
+    --success-foreground: 0.13 0.006 285;
+    --warning: 0.78 0.15 80;
+    --warning-foreground: 0.16 0.02 80;
+    --info: 0.68 0.11 250;
+    --info-foreground: 0.13 0.006 285;
+
+    --border: 0.26 0.01 285;
+    --input: 0.26 0.01 285;
     --ring: 0.72 0.18 165;
 
-    --chart-1: 0.72 0.18 165;
-    --chart-2: 0.68 0.12 280;
-    --chart-3: 0.28 0.01 280;
-    --chart-4: 0.62 0.2 50;
-    --chart-5: 0.48 0.15 0;
+    /* Data-dense dashboard surfaces */
+    --surface-inset: 0.14 0.007 285;
+    --surface-raised: 0.2 0.009 285;
+    --surface-hover: 0.22 0.01 285;
+    --track: 0.24 0.01 285;
 
-    --sidebar: 0.16 0 0;
-    --sidebar-foreground: 0.94 0 0;
+    /* Memory proportion segments (heap / stable / wasm) */
+    --memory-heap: 0.7 0.13 285;
+    --memory-stable: 0.74 0.16 165;
+    --memory-wasm: 0.78 0.14 70;
+
+    --chart-1: 0.7 0.13 285;
+    --chart-2: 0.74 0.16 165;
+    --chart-3: 0.78 0.14 70;
+    --chart-4: 0.68 0.11 250;
+    --chart-5: 0.66 0.14 25;
+
+    --sidebar: 0.16 0.008 285;
+    --sidebar-foreground: 0.94 0.004 285;
     --sidebar-primary: 0.68 0.12 280;
-    --sidebar-primary-foreground: 0.12 0 0;
-    --sidebar-accent: 0.2 0 0;
-    --sidebar-accent-foreground: 0.82 0 0;
-    --sidebar-border: 0.24 0 0;
+    --sidebar-primary-foreground: 0.13 0.006 285;
+    --sidebar-accent: 0.21 0.008 285;
+    --sidebar-accent-foreground: 0.82 0.004 285;
+    --sidebar-border: 0.26 0.01 285;
     --sidebar-ring: 0.72 0.18 165;
-
-    --status-healthy: 0.28 0.12 165;
-    --status-healthy-foreground: 0.86 0.16 165;
-    --status-warning: 0.32 0.13 75;
-    --status-warning-foreground: 0.88 0.15 75;
-    --status-critical: 0.34 0.16 25;
-    --status-critical-foreground: 0.88 0.17 25;
-    --status-stopped: 0.24 0.01 280;
-    --status-stopped-foreground: 0.68 0.01 280;
-
-    --chart-line: 0.72 0.18 165;
-    --chart-area: 0.42 0.095 285;
-    --chart-grid: 0.24 0 0;
   }
 
   * {
@@ -154,23 +164,125 @@
   .text-balance {
     text-wrap: balance;
   }
+
+  /* ---- Status badges: running / stopped / stopping ---- */
   .status-badge {
     @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-smooth;
   }
-  .status-healthy {
-    background: oklch(var(--status-healthy));
-    color: oklch(var(--status-healthy-foreground));
-  }
-  .status-warning {
-    background: oklch(var(--status-warning));
-    color: oklch(var(--status-warning-foreground));
-  }
-  .status-critical {
-    background: oklch(var(--status-critical));
-    color: oklch(var(--status-critical-foreground));
+  .status-running {
+    @apply bg-success/15 text-success dark:bg-success/20 dark:text-success;
   }
   .status-stopped {
-    background: oklch(var(--status-stopped));
-    color: oklch(var(--status-stopped-foreground));
+    @apply bg-muted text-muted-foreground;
+  }
+  .status-stopping {
+    @apply bg-warning/15 text-warning dark:bg-warning/20 dark:text-warning;
+  }
+  /* Legacy aliases retained for existing surfaces */
+  .status-pending {
+    @apply bg-warning/15 text-warning dark:bg-warning/20 dark:text-warning;
+  }
+  .status-success {
+    @apply bg-success/15 text-success dark:bg-success/20 dark:text-success;
+  }
+  .status-error {
+    @apply bg-destructive/15 text-destructive dark:bg-destructive/20 dark:text-destructive;
+  }
+
+  /* ---- Stat cards: label + big mono figure + sub-metric ---- */
+  .stat-card {
+    @apply rounded-lg border border-border bg-card p-4 flex flex-col gap-2 transition-smooth;
+  }
+  .stat-card:hover {
+    @apply bg-surface-hover shadow-xs;
+  }
+  .stat-label {
+    @apply text-[0.6875rem] font-semibold uppercase tracking-widest text-muted-foreground;
+  }
+  .stat-value {
+    @apply font-mono text-2xl font-semibold tabular-nums tracking-tight text-foreground;
+  }
+  .stat-sub {
+    @apply text-xs text-muted-foreground;
+  }
+
+  /* ---- Comparison table ---- */
+  .data-table {
+    @apply w-full border-collapse text-sm;
+  }
+  .data-table thead th {
+    @apply bg-surface-inset px-3 py-2 text-left text-[0.6875rem] font-semibold uppercase tracking-widest text-muted-foreground;
+  }
+  .data-table tbody td {
+    @apply border-t border-border px-3 py-2.5 align-middle;
+  }
+  .data-table tbody tr {
+    @apply transition-smooth;
+  }
+  .data-table tbody tr:hover {
+    @apply bg-surface-hover;
+  }
+  .data-table .num {
+    @apply font-mono tabular-nums text-right;
+  }
+
+  /* ---- Memory proportion bar ---- */
+  .memory-bar {
+    @apply flex h-2 w-full overflow-hidden rounded-full bg-track;
+  }
+  .memory-segment {
+    @apply h-full transition-smooth;
+  }
+  .memory-heap {
+    background-color: oklch(var(--memory-heap));
+  }
+  .memory-stable {
+    background-color: oklch(var(--memory-stable));
+  }
+  .memory-wasm {
+    background-color: oklch(var(--memory-wasm));
+  }
+  .memory-legend {
+    @apply flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground;
+  }
+  .memory-dot {
+    @apply inline-block h-2 w-2 rounded-full;
+  }
+
+  /* ---- Settings rows ---- */
+  .settings-row {
+    @apply flex items-center justify-between gap-4 border-b border-border py-3 last:border-b-0;
+  }
+  .settings-row-label {
+    @apply text-sm font-medium text-foreground;
+  }
+  .settings-row-hint {
+    @apply text-xs text-muted-foreground;
+  }
+  .settings-row-value {
+    @apply font-mono text-sm tabular-nums text-foreground;
+  }
+
+  /* ---- Recessed telemetry well ---- */
+  .surface-inset {
+    @apply rounded-md border border-border bg-surface-inset;
+  }
+  .surface-raised {
+    @apply rounded-lg border border-border bg-surface-raised;
+  }
+}
+
+/* ---- Reduced motion: honor the user's OS preference ---- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .transition-smooth {
+    transition: none !important;
   }
 }

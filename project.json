@@ -1,22 +1,20 @@
 {
-  "overview": "A cycle monitoring and management dashboard for Internet Computer canister operators — track multiple canisters, set alert thresholds, view burn-rate projections, and get email alerts when balances drop.",
+  "overview": "A canister operations dashboard for monitoring and managing the compute resources of multiple Internet Computer canisters.",
   "features": [
-    "Connect and monitor multiple canisters",
-    "Per-canister alert thresholds with email notifications",
-    "Burn-rate calculation from balance history snapshots",
-    "Days-remaining projection and depletion date",
-    "Top-up recommendations per canister",
-    "Unified dashboard with sort, filter, and total cycles summary",
-    "Controller-setup guidance with live polling",
-    "Dark-mode fintech design system"
+    "Add and manage multiple canisters by principal ID",
+    "Monitor cycle balances side by side",
+    "Burn rate and runway estimates per canister",
+    "Memory breakdown: heap, stable, and wasm",
+    "Canister settings: compute allocation, memory allocation, freezing threshold",
+    "Live ICP-to-Cycles rate with a Re-up link to official canister management"
   ],
-  "category": "productivity",
+  "category": "dashboard",
   "tags": [
-    "icp",
+    "canister-management",
     "cycles",
     "monitoring",
-    "dashboard",
-    "canister-management"
+    "internet-computer",
+    "developer-tools"
   ],
-  "last_updated": "2026-07-11T18:27:35.958Z"
+  "last_updated": "2026-09-21T01:56:01.588Z"
 }

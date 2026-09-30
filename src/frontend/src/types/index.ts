@@ -1,55 +1,62 @@
-// ─── Monitoring types ─────────────────────────────────────────────────────────
-// These mirror the backend monitoring-api.mo types. The backend uses Principal
-// for canister IDs and Nat for cycle amounts; on the frontend we work with
-// string canister IDs (Principal.toText) and bigint for cycles.
+/**
+ * Shared frontend types for the CycleWatch canister operations panel.
+ *
+ * These mirror the generated backend contract in `src/frontend/src/backend.d.ts`.
+ * Backend enums are re-exported as values so consumers can use them in
+ * comparisons and `switch` statements.
+ */
 
-/** A canister the user has connected for monitoring. */
-export interface MonitoredCanister {
-  canisterId: string;
-  connectedAt: bigint;
-  thresholdCycles: bigint;
-  alertEnabled: boolean;
-  /** null when no alert has been sent yet. */
-  lastAlertSentAt: bigint | null;
-}
+export type {
+  CanisterId,
+  CanisterResources,
+  CanisterSettings,
+  CanisterStatus,
+  CanisterStatusInfo,
+  Cycles,
+  IcpToCyclesRate,
+  ManagedCanister,
+  MemoryBreakdown,
+  Timestamp,
+} from "../backend.d";
 
-/** A single balance sample recorded by the backend. */
-export interface BalanceSnapshot {
-  canisterId: string;
-  balance: bigint;
-  timestamp: bigint;
-}
+/** Lifecycle state of a managed canister, flattened for UI branching. */
+export type CanisterStatusKind = "running" | "stopping" | "stopped" | "unknown";
 
-/** Aggregated status info for a monitored canister. */
-export interface CanisterStatusInfo {
+/** A managed canister paired with its live status and resource telemetry. */
+export interface CanisterOverview {
   canisterId: string;
-  balance: bigint;
-  /** Raw canister status string from the IC (e.g. "running", "stopped"). */
-  status: string;
-  /** Controller principals as text. */
+  addedAt: bigint;
+  status: CanisterStatusKind;
+  statusDetail: string | null;
   controllers: string[];
-  lastChecked: bigint;
-  threshold: bigint;
-  alertEnabled: boolean;
-  belowThreshold: boolean;
+  cycleBalance: bigint;
+  burnRateCyclesPerDay: bigint;
+  runwayDays: bigint;
+  memory: {
+    heapBytes: bigint;
+    stableBytes: bigint;
+    wasmBytes: bigint;
+  };
+  settings: {
+    computeAllocation: bigint;
+    memoryAllocation: bigint;
+    freezingThreshold: bigint;
+  };
 }
 
-/** Burn-rate projection computed from balance history. */
-export interface BurnRateInfo {
-  cyclesPerDay: number;
-  daysRemaining: number;
-  projectedDepletionDate: bigint;
-  snapshotCount: bigint;
+/** Aggregate figures across every managed canister. */
+export interface AggregateResources {
+  totalCycleBalance: bigint;
+  totalBurnRateCyclesPerDay: bigint;
+  minRunwayDays: bigint;
+  canisterCount: number;
 }
 
-// ─── Result variants ──────────────────────────────────────────────────────────
-// The backend returns Motoko result variants as discriminated unions via
-// bindgen. We mirror the shape here for type-safe handling.
-
-export type BalanceResult =
-  | { __kind__: "ok"; ok: bigint }
-  | { __kind__: "err"; err: string };
-
-export type StatusResult =
-  | { __kind__: "ok"; ok: CanisterStatusInfo }
-  | { __kind__: "err"; err: string };
+/** A single memory segment rendered in a proportion bar. */
+export interface MemorySegment {
+  key: "heap" | "stable" | "wasm";
+  label: string;
+  bytes: bigint;
+  percent: number;
+  className: string;
+}

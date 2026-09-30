@@ -1,6 +1,14 @@
 import { Button } from "@/components/ui/button";
 import { useInternetIdentity } from "@caffeineai/core-infrastructure";
-import { Activity, ArrowRight, Loader2, Shield, Zap } from "lucide-react";
+import {
+  ArrowRight,
+  ExternalLink,
+  Gauge,
+  Layers,
+  Loader2,
+  Shield,
+  TrendingDown,
+} from "lucide-react";
 import { motion } from "motion/react";
 
 export function LoginPage() {
@@ -26,10 +34,10 @@ export function LoginPage() {
         <div className="flex items-center justify-center mb-8">
           <div className="flex items-center gap-2.5">
             <div className="w-10 h-10 rounded-xl bg-primary/20 border border-primary/30 flex items-center justify-center shadow-lg">
-              <Zap size={20} className="text-primary" />
+              <Gauge size={20} className="text-primary" />
             </div>
             <span className="text-xl font-display font-semibold text-foreground">
-              Cycle<span className="text-primary">Watch</span>
+              Cycle<span className="text-accent">Watch</span>
             </span>
           </div>
         </div>
@@ -38,11 +46,11 @@ export function LoginPage() {
         <div className="bg-card border border-border rounded-2xl shadow-xl p-8">
           <div className="text-center mb-8">
             <h1 className="text-2xl font-display font-bold text-foreground mb-2">
-              Monitor your canister cycles
+              Monitor your canisters
             </h1>
             <p className="text-muted-foreground text-sm leading-relaxed">
-              Connect your ICP canisters to track cycle balances, burn rates,
-              and depletion projections in one unified dashboard.
+              Sign in to track cycle balances, burn rate and runway across every
+              canister you control.
             </p>
           </div>
 
@@ -103,7 +111,7 @@ export function LoginPage() {
         {/* Footer note */}
         <p className="text-center text-xs text-muted-foreground mt-6 flex items-center justify-center gap-1.5">
           <Shield size={12} />
-          Your identity and assets remain fully in your control
+          Your identity and canisters remain fully in your control
         </p>
       </motion.div>
     </div>
@@ -112,21 +120,21 @@ export function LoginPage() {
 
 const features = [
   {
-    icon: Activity,
-    label: "Real-time cycle monitoring",
+    icon: Layers,
+    label: "Manage multiple canisters",
     description:
-      "Track cycle balances across all your canisters with live refresh",
+      "Add, switch between, and monitor every canister you control side by side",
   },
   {
-    icon: Zap,
-    label: "Multi-canister management",
+    icon: TrendingDown,
+    label: "Cycles, burn rate and runway",
     description:
-      "Connect any number of canisters and monitor them from one dashboard",
+      "Live cycle balance with burn rate and estimated days until exhaustion",
   },
   {
-    icon: ArrowRight,
-    label: "Cost projection & alerts",
+    icon: ExternalLink,
+    label: "Live ICP-to-Cycles rate",
     description:
-      "See burn rates, days remaining, and depletion dates at a glance",
+      "Rate sourced from the CMC, with a Re-up link to the official canister management UI",
   },
 ];

@@ -112,7 +112,7 @@ export function formatICError(err: unknown): string {
   const body = extractBody(message);
 
   if (isStopped(message, body)) {
-    return "This canister is currently stopped. Please start it in the NNS or your management tool and try again.";
+    return "This canister is currently stopped. Start it from the NNS canister management UI and try again.";
   }
 
   if (isNotFound(message, body)) {
@@ -121,9 +121,9 @@ export function formatICError(err: unknown): string {
 
   if (isNotAuthorized(message, body)) {
     return (
-      "Not authorized to access this canister. The CyclesFunder backend canister is not a controller of your canister. " +
-      "To read the cycle balance and perform transfers, you need to add the backend canister as a controller of your canister. " +
-      "You can do this from the NNS dashboard or by running:\n\n" +
+      "Not authorized to read this canister. The CycleWatch backend canister is not a controller of your canister. " +
+      "To read cycle balances and compute settings, add the backend canister as a controller of your canister. " +
+      "You can do this from the NNS canister management UI or by running:\n\n" +
       "dfx canister update-settings --add-controller <BACKEND_CANISTER_ID> <YOUR_CANISTER_ID>"
     );
   }

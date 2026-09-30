@@ -1,649 +1,813 @@
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { useQueryClient } from "@tanstack/react-query";
-import { useNavigate, useSearch } from "@tanstack/react-router";
 import {
   AlertCircle,
+  ArrowUpRight,
+  Check,
   Copy,
+  Cpu,
+  ExternalLink,
   Gauge,
-  Link2,
-  PlusCircle,
+  HardDrive,
+  Layers,
+  Plus,
   RefreshCw,
   Server,
+  Trash2,
+  TrendingDown,
   Zap,
 } from "lucide-react";
-import { AnimatePresence, motion } from "motion/react";
-import { useMemo, useState } from "react";
+import { motion } from "motion/react";
+import { useState } from "react";
 import { toast } from "sonner";
-import { ConnectCanisterPanel } from "../components/ConnectCanisterPanel";
+import type { ManagedCanister } from "../backend.d";
+import {
+  useActiveCanister,
+  useSetActiveCanister,
+} from "../hooks/useActiveCanister";
 import { useAutoRefresh } from "../hooks/useAutoRefresh";
-import { useCanisterStatus } from "../hooks/useCanisterStatus";
-import { useMonitoredCanisters } from "../hooks/useMonitoredCanisters";
-import type { CanisterStatusInfo } from "../types";
-import { formatICError } from "../utils/formatICError";
+import { useCanisterAggregate } from "../hooks/useCanisterAggregate";
+import { useCanisterOverviews } from "../hooks/useCanisterOverview";
+import {
+  useIcpToCyclesRate,
+  useRefreshIcpToCyclesRate,
+} from "../hooks/useIcpToCyclesRate";
+import {
+  useAddCanister,
+  useManagedCanisters,
+  useRemoveCanister,
+} from "../hooks/useManagedCanisters";
+import type {
+  CanisterOverview,
+  CanisterStatusKind,
+  MemorySegment,
+} from "../types";
+import {
+  formatBurnRate,
+  formatBytes,
+  formatCycles,
+  formatIcpToCyclesRate,
+  formatRunway,
+  timestampToDate,
+  truncateCanisterId,
+} from "../utils/formatCycles";
+import { classifyICError, formatICError } from "../utils/formatICError";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+// ─── Constants ────────────────────────────────────────────────────────────────
 
-type StatusFilter = "all" | "healthy" | "warning" | "critical" | "error";
-type SortKey = "balance-desc" | "balance-asc" | "name-asc" | "days-asc";
+const NNS_CANISTER_URL = "https://nns.ic0.app/canisters";
 
-interface DashboardSearch {
-  status?: string;
-  sort?: string;
-}
+const STATUS_LABEL: Record<CanisterStatusKind, string> = {
+  running: "RUNNING",
+  stopping: "STOPPING",
+  stopped: "STOPPED",
+  unknown: "UNKNOWN",
+};
+
+const STATUS_CLASS: Record<CanisterStatusKind, string> = {
+  running: "status-running",
+  stopping: "status-stopping",
+  stopped: "status-stopped",
+  unknown: "status-stopped",
+};
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function formatCycles(cycles: bigint): string {
-  const t = Number(cycles) / 1e12;
-  if (t >= 1000) return `${(t / 1000).toFixed(1)}P`;
-  if (t >= 1) return `${t.toFixed(2)}T`;
-  const b = Number(cycles) / 1e9;
-  if (b >= 1) return `${b.toFixed(1)}B`;
-  const m = Number(cycles) / 1e6;
-  return `${m.toFixed(0)}M`;
+function memorySegments(memory: CanisterOverview["memory"]): MemorySegment[] {
+  const total = memory.heapBytes + memory.stableBytes + memory.wasmBytes;
+  const pct = (bytes: bigint) =>
+    total > BigInt(0) ? (Number(bytes) / Number(total)) * 100 : 0;
+  return [
+    {
+      key: "heap",
+      label: "HEAP",
+      bytes: memory.heapBytes,
+      percent: pct(memory.heapBytes),
+      className: "memory-heap",
+    },
+    {
+      key: "stable",
+      label: "STABLE",
+      bytes: memory.stableBytes,
+      percent: pct(memory.stableBytes),
+      className: "memory-stable",
+    },
+    {
+      key: "wasm",
+      label: "WASM",
+      bytes: memory.wasmBytes,
+      percent: pct(memory.wasmBytes),
+      className: "memory-wasm",
+    },
+  ];
 }
 
-function truncateCanisterId(id: string): string {
-  if (id.length <= 22) return id;
-  return `${id.slice(0, 10)}…${id.slice(-8)}`;
+function formatUpdatedAt(timestamp: bigint | undefined): string {
+  if (timestamp === undefined) return "—";
+  const date = timestampToDate(timestamp);
+  if (!date) return "—";
+  return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 }
 
-function formatRelativeTime(ns: bigint): string {
-  const ms = Number(ns) / 1e6;
-  const diff = Date.now() - ms;
-  if (diff < 0) return "just now";
-  const sec = Math.floor(diff / 1000);
-  if (sec < 60) return `${sec}s ago`;
-  const min = Math.floor(sec / 60);
-  if (min < 60) return `${min} min ago`;
-  const hr = Math.floor(min / 60);
-  if (hr < 24) return `${hr}h ago`;
-  const day = Math.floor(hr / 24);
-  return `${day}d ago`;
+// ─── Status pill ──────────────────────────────────────────────────────────────
+
+function StatusPill({ status }: { status: CanisterStatusKind }) {
+  return (
+    <span className={cn("status-badge", STATUS_CLASS[status])}>
+      <span
+        className="h-1.5 w-1.5 rounded-full bg-current"
+        aria-hidden="true"
+      />
+      {STATUS_LABEL[status]}
+    </span>
+  );
 }
 
-/** Derive a card status from the backend status info. */
-function deriveCardStatus(
-  info: CanisterStatusInfo | null,
-): "healthy" | "warning" | "critical" | "stopped" {
-  if (!info) return "stopped";
-  if (info.status === "stopped") return "stopped";
-  if (info.belowThreshold) return "critical";
-  // Warning if balance is within 2x of threshold
-  if (info.threshold > BigInt(0) && info.balance < info.threshold * BigInt(2)) {
-    return "warning";
-  }
-  return "healthy";
+// ─── Memory proportion bar ────────────────────────────────────────────────────
+
+function MemoryBar({
+  memory,
+  showLegend,
+}: {
+  memory: CanisterOverview["memory"];
+  showLegend?: boolean;
+}) {
+  const segments = memorySegments(memory);
+  return (
+    <div className="min-w-0 space-y-1.5">
+      <div
+        className="memory-bar"
+        role="img"
+        aria-label={segments
+          .map((s) => `${s.label} ${formatBytes(s.bytes)}`)
+          .join(", ")}
+      >
+        {segments.map((segment) => (
+          <span
+            key={segment.key}
+            className={cn("memory-segment", segment.className)}
+            style={{ width: `${segment.percent}%` }}
+          />
+        ))}
+      </div>
+      {showLegend && (
+        <div className="memory-legend">
+          {segments.map((segment) => (
+            <span key={segment.key} className="flex items-center gap-1.5">
+              <span
+                className={cn("memory-dot", segment.className)}
+                aria-hidden="true"
+              />
+              <span className="text-[0.625rem] font-semibold uppercase tracking-widest">
+                {segment.label}
+              </span>
+              <span className="font-mono text-[0.6875rem] tabular-nums text-foreground">
+                {formatBytes(segment.bytes)}
+              </span>
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
-const STATUS_LABEL: Record<string, string> = {
-  healthy: "Healthy",
-  warning: "Warning",
-  critical: "Critical",
-  stopped: "Stopped",
-  error: "Error",
-};
-
-// ─── Stat Card ────────────────────────────────────────────────────────────────
+// ─── Stat card ────────────────────────────────────────────────────────────────
 
 function StatCard({
   label,
   value,
+  sub,
   icon: Icon,
-  mono,
-  variant = "default",
+  accent,
 }: {
   label: string;
   value: React.ReactNode;
+  sub: string;
   icon: React.ElementType;
-  mono?: boolean;
-  variant?: "default" | "accent" | "critical";
+  accent?: boolean;
 }) {
-  const iconWrap =
-    variant === "accent"
-      ? "bg-accent/15 border-accent/25"
-      : variant === "critical"
-        ? "bg-destructive/15 border-destructive/25"
-        : "bg-primary/15 border-primary/25";
-  const iconColor =
-    variant === "accent"
-      ? "text-accent"
-      : variant === "critical"
-        ? "text-destructive"
-        : "text-primary";
-  const valueColor =
-    variant === "critical"
-      ? "text-destructive"
-      : variant === "accent"
-        ? "text-accent"
-        : "text-foreground";
+  return (
+    <div className="stat-card" data-ocid="stat-card">
+      <div className="flex items-start justify-between gap-3">
+        <span className="stat-label">{label}</span>
+        <Icon
+          size={15}
+          className={accent ? "text-accent shrink-0" : "text-primary shrink-0"}
+          aria-hidden="true"
+        />
+      </div>
+      <span className={cn("stat-value", accent && "text-accent")}>{value}</span>
+      <span className="stat-sub">{sub}</span>
+    </div>
+  );
+}
+
+// ─── Add canister form ────────────────────────────────────────────────────────
+
+function AddCanisterForm() {
+  const addCanister = useAddCanister();
+  const [value, setValue] = useState("");
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
+    const trimmed = value.trim();
+    if (!trimmed) return;
+    setError(null);
+    setValue("");
+    addCanister.mutate(trimmed, {
+      onSuccess: () => toast.success("Canister added to the panel."),
+      onError: (err: Error) => {
+        setError(formatICError(err));
+        setValue((current) => (current === "" ? trimmed : current));
+      },
+    });
+  };
 
   return (
-    <Card className="border-border bg-card">
-      <CardContent className="p-4 sm:p-5">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0 flex-1">
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
-              {label}
-            </p>
-            <div
-              className={cn(
-                "text-xl sm:text-2xl font-bold truncate",
-                mono && "font-mono",
-                valueColor,
-              )}
-            >
-              {value}
-            </div>
-          </div>
-          <div
-            className={cn(
-              "w-9 h-9 rounded-lg flex items-center justify-center shrink-0 border",
-              iconWrap,
-            )}
-          >
-            <Icon size={17} className={iconColor} />
-          </div>
+    <form
+      onSubmit={handleSubmit}
+      className="space-y-2"
+      data-ocid="add-canister-form"
+    >
+      <div className="flex flex-col gap-2 sm:flex-row">
+        <Input
+          value={value}
+          onChange={(event) => {
+            setValue(event.target.value);
+            setError(null);
+          }}
+          placeholder="rrkah-fqaaa-aaaaa-aaaaq-cai"
+          aria-label="Canister principal ID"
+          className="font-mono text-sm flex-1"
+          data-ocid="canister-id-input"
+          disabled={addCanister.isPending}
+        />
+        <Button
+          type="submit"
+          disabled={!value.trim() || addCanister.isPending}
+          data-ocid="add-canister-button"
+          className="bg-primary text-primary-foreground hover:bg-primary/90 transition-smooth sm:shrink-0"
+        >
+          {addCanister.isPending ? (
+            <RefreshCw size={14} className="animate-spin" aria-hidden="true" />
+          ) : (
+            <Plus size={14} aria-hidden="true" />
+          )}
+          {addCanister.isPending ? "Adding…" : "Add canister"}
+        </Button>
+      </div>
+      {error && (
+        <p
+          className="flex items-start gap-1.5 text-xs text-destructive"
+          data-ocid="add-canister-error"
+          role="alert"
+        >
+          <AlertCircle
+            size={12}
+            className="mt-0.5 shrink-0"
+            aria-hidden="true"
+          />
+          <span className="min-w-0 break-words">{error}</span>
+        </p>
+      )}
+    </form>
+  );
+}
+
+// ─── Canister rail ────────────────────────────────────────────────────────────
+
+function CanisterRail({
+  canisters,
+  activeCanisterId,
+  onSelect,
+  isSwitching,
+}: {
+  canisters: ManagedCanister[];
+  activeCanisterId: string | null;
+  onSelect: (canisterId: string) => void;
+  isSwitching: boolean;
+}) {
+  return (
+    <Card className="border-border bg-card" data-ocid="canister-rail">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-sm font-display flex items-center gap-2">
+          <Layers size={14} className="text-primary" aria-hidden="true" />
+          Managed canisters
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <ul className="space-y-1" data-ocid="canister-list">
+          {canisters.map((canister, index) => {
+            const canisterId = canister.canisterId.toText();
+            const isActive = canisterId === activeCanisterId;
+            return (
+              <li key={canisterId}>
+                <button
+                  type="button"
+                  onClick={() => onSelect(canisterId)}
+                  disabled={isSwitching}
+                  aria-pressed={isActive}
+                  data-ocid={`canister.item.${index + 1}`}
+                  className={cn(
+                    "w-full rounded-md border px-3 py-2 text-left transition-smooth",
+                    isActive
+                      ? "border-primary/40 bg-primary/10"
+                      : "border-transparent hover:border-border hover:bg-surface-hover",
+                  )}
+                >
+                  <span className="flex items-center gap-2">
+                    <span
+                      className={cn(
+                        "h-1.5 w-1.5 shrink-0 rounded-full",
+                        isActive ? "bg-accent" : "bg-muted-foreground",
+                      )}
+                      aria-hidden="true"
+                    />
+                    <span className="min-w-0 flex-1 truncate font-mono text-xs text-foreground">
+                      {truncateCanisterId(canisterId, 14, 6)}
+                    </span>
+                    {isActive && (
+                      <Check
+                        size={12}
+                        className="shrink-0 text-accent"
+                        aria-hidden="true"
+                      />
+                    )}
+                  </span>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+        <AddCanisterForm />
+      </CardContent>
+    </Card>
+  );
+}
+
+// ─── Comparison table ─────────────────────────────────────────────────────────
+
+function ComparisonTable({
+  canisters,
+  overviews,
+  activeCanisterId,
+  onSelect,
+  onRemove,
+  isRemoving,
+  isLoading,
+}: {
+  canisters: ManagedCanister[];
+  overviews: CanisterOverview[];
+  activeCanisterId: string | null;
+  onSelect: (canisterId: string) => void;
+  onRemove: (canisterId: string) => void;
+  isRemoving: boolean;
+  isLoading: boolean;
+}) {
+  const overviewById = new Map(overviews.map((o) => [o.canisterId, o]));
+
+  return (
+    <Card className="border-border bg-card" data-ocid="comparison-panel">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-sm font-display flex items-center gap-2">
+          <Server size={14} className="text-primary" aria-hidden="true" />
+          Canister comparison
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="p-0">
+        <div className="overflow-x-auto">
+          <table className="data-table" data-ocid="canister-table">
+            <thead>
+              <tr>
+                <th scope="col">Canister ID</th>
+                <th scope="col">Status</th>
+                <th scope="col" className="text-right">
+                  Cycle balance
+                </th>
+                <th scope="col" className="text-right">
+                  Burn rate
+                </th>
+                <th scope="col" className="text-right">
+                  Runway
+                </th>
+                <th scope="col" className="min-w-[11rem]">
+                  Memory proportion
+                </th>
+                <th scope="col" className="text-right">
+                  <span className="sr-only">Actions</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {canisters.map((canister, index) => {
+                const canisterId = canister.canisterId.toText();
+                const overview = overviewById.get(canisterId);
+                const isActive = canisterId === activeCanisterId;
+                return (
+                  <tr
+                    key={canisterId}
+                    data-ocid={`canister.row.${index + 1}`}
+                    className={cn(isActive && "bg-primary/5")}
+                  >
+                    <td>
+                      <button
+                        type="button"
+                        onClick={() => onSelect(canisterId)}
+                        data-ocid={`canister.select_button.${index + 1}`}
+                        className="flex items-center gap-2 text-left transition-smooth hover:text-accent"
+                        title={canisterId}
+                      >
+                        <span
+                          className={cn(
+                            "h-1.5 w-1.5 shrink-0 rounded-full",
+                            isActive ? "bg-accent" : "bg-muted-foreground",
+                          )}
+                          aria-hidden="true"
+                        />
+                        <span className="font-mono text-xs text-foreground">
+                          {truncateCanisterId(canisterId, 14, 6)}
+                        </span>
+                      </button>
+                    </td>
+                    <td>
+                      {overview ? (
+                        <StatusPill status={overview.status} />
+                      ) : isLoading ? (
+                        <Skeleton className="h-6 w-20 rounded-md" />
+                      ) : (
+                        <span
+                          className="status-badge status-error"
+                          data-ocid={`canister.error_state.${index + 1}`}
+                        >
+                          <AlertCircle size={11} aria-hidden="true" />
+                          UNREADABLE
+                        </span>
+                      )}
+                    </td>
+                    <td className="num">
+                      {overview ? (
+                        formatCycles(overview.cycleBalance)
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
+                      )}
+                    </td>
+                    <td className="num">
+                      {overview ? (
+                        formatBurnRate(overview.burnRateCyclesPerDay)
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
+                      )}
+                    </td>
+                    <td className="num">
+                      {overview ? (
+                        formatRunway(overview.runwayDays)
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
+                      )}
+                    </td>
+                    <td>
+                      {overview ? (
+                        <MemoryBar memory={overview.memory} />
+                      ) : (
+                        <span className="text-xs text-muted-foreground">
+                          Unavailable
+                        </span>
+                      )}
+                    </td>
+                    <td className="text-right">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onRemove(canisterId)}
+                        disabled={isRemoving}
+                        aria-label={`Remove ${canisterId}`}
+                        data-ocid={`canister.delete_button.${index + 1}`}
+                        className="h-7 w-7 p-0 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-smooth"
+                      >
+                        <Trash2 size={13} aria-hidden="true" />
+                      </Button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       </CardContent>
     </Card>
   );
 }
 
-// ─── Canister Card ────────────────────────────────────────────────────────────
+// ─── Active canister detail ───────────────────────────────────────────────────
 
-function CanisterCard({
-  canisterId,
-  index,
-  autoRefresh,
+function ActiveCanisterDetail({
+  overview,
+  isLoading,
+  error,
+  onRetry,
+  isRetrying,
 }: {
-  canisterId: string;
-  index: number;
-  autoRefresh: boolean;
+  overview: CanisterOverview | undefined;
+  isLoading: boolean;
+  error: Error | null;
+  onRetry: () => void;
+  isRetrying: boolean;
 }) {
-  const navigate = useNavigate();
-  const { status, isLoading, error } = useCanisterStatus(canisterId, {
-    refetchInterval: autoRefresh ? 30_000 : undefined,
-  });
-
-  const cardStatus = deriveCardStatus(status);
-  const balance = status?.balance ?? BigInt(0);
-  const threshold = status?.threshold ?? BigInt(0);
-  const lastChecked = status?.lastChecked ?? BigInt(0);
-
-  const handleCopy = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    navigator.clipboard.writeText(canisterId);
-    toast.success("Canister ID copied");
-  };
-
-  const handleClick = () => {
-    navigate({ to: "/canister/$canisterId", params: { canisterId } });
-  };
-
-  const thresholdPct =
-    threshold > BigInt(0)
-      ? Math.min(100, Number((balance * BigInt(100)) / threshold))
-      : 100;
-
-  if (isLoading) {
+  if (isLoading && !overview) {
     return (
-      <Card data-ocid={`canister.card.${index + 1}`}>
-        <CardContent className="p-4 space-y-3">
+      <Card className="border-border bg-card" data-ocid="detail-panel">
+        <CardContent className="space-y-3 p-4">
           <Skeleton className="h-4 w-32" />
-          <Skeleton className="h-8 w-24" />
-          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-2 w-full rounded-full" />
+          <Skeleton className="h-4 w-40" />
+          <Skeleton className="h-4 w-36" />
         </CardContent>
       </Card>
     );
   }
 
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, delay: Math.min(index * 0.05, 0.3) }}
-    >
-      <Card
-        data-ocid={`canister.card.${index + 1}`}
-        className={cn(
-          "border-border bg-card relative transition-smooth hover:shadow-card-hover",
-          "focus-within:ring-2 focus-within:ring-ring",
-        )}
-      >
-        <CardContent className="p-4 space-y-3">
-          <button
-            type="button"
-            onClick={handleClick}
-            aria-label={`View details for canister ${canisterId}`}
-            data-ocid={`canister.card_link.${index + 1}`}
-            className="absolute inset-0 h-full w-full cursor-pointer"
-          />
-          {/* Header: canister ID + copy */}
-          <div className="flex items-center justify-between gap-2 relative z-10">
-            <code
-              className="text-xs font-mono text-foreground truncate min-w-0"
-              title={canisterId}
-            >
-              {truncateCanisterId(canisterId)}
-            </code>
-            <button
+  if (!overview) {
+    const kind = error ? classifyICError(error) : null;
+    const headline =
+      kind === "unauthorized"
+        ? "Not a controller of this canister"
+        : kind === "stopped"
+          ? "Canister is stopped"
+          : kind === "not_found"
+            ? "Canister not found"
+            : "Status unavailable";
+    return (
+      <Card className="border-border bg-card" data-ocid="detail-panel">
+        <CardContent className="space-y-3 p-4" data-ocid="detail-error-state">
+          <div className="flex items-start gap-2">
+            <AlertCircle
+              size={15}
+              className="mt-0.5 shrink-0 text-destructive"
+              aria-hidden="true"
+            />
+            <div className="min-w-0 space-y-1">
+              <p className="text-sm font-medium text-foreground">{headline}</p>
+              <p className="text-xs text-muted-foreground break-words">
+                {error
+                  ? formatICError(error)
+                  : "Select a canister to inspect its compute resources."}
+              </p>
+            </div>
+          </div>
+          {error && kind !== "stopped" && (
+            <Button
               type="button"
-              onClick={handleCopy}
-              aria-label="Copy canister ID"
-              data-ocid={`canister.copy_button.${index + 1}`}
-              className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-smooth shrink-0"
+              variant="outline"
+              size="sm"
+              onClick={onRetry}
+              disabled={isRetrying}
+              data-ocid="detail-retry-button"
+              className="border-border text-muted-foreground hover:bg-surface-hover hover:text-foreground transition-smooth"
             >
-              <Copy size={12} />
-            </button>
-          </div>
-
-          {/* Balance */}
-          {error ? (
-            <p
-              className="text-xs text-destructive break-words min-w-0"
-              data-ocid={`canister.error_state.${index + 1}`}
-            >
-              {formatICError(error)}
-            </p>
-          ) : (
-            <div>
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wider">
-                Cycle Balance
-              </p>
-              <p className="text-2xl font-mono font-bold text-foreground">
-                {formatCycles(balance)}
-              </p>
-            </div>
-          )}
-
-          {/* Status badge */}
-          <div className="flex items-center justify-between gap-2">
-            <span
-              className={cn(
-                "status-badge",
-                cardStatus === "healthy" && "status-healthy",
-                cardStatus === "warning" && "status-warning",
-                cardStatus === "critical" && "status-critical",
-                cardStatus === "stopped" && "status-stopped",
-              )}
-              data-ocid={`canister.status_badge.${index + 1}`}
-            >
-              {STATUS_LABEL[cardStatus]}
-            </span>
-            <span className="text-[10px] text-muted-foreground font-mono">
-              {formatRelativeTime(lastChecked)}
-            </span>
-          </div>
-
-          {/* Threshold indicator */}
-          {threshold > BigInt(0) && (
-            <div className="space-y-1">
-              <div className="flex items-center justify-between text-[10px] text-muted-foreground">
-                <span>Threshold: {formatCycles(threshold)}</span>
-                <span>{thresholdPct}%</span>
-              </div>
-              <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-                <div
-                  className={cn(
-                    "h-full rounded-full transition-all duration-500",
-                    cardStatus === "critical"
-                      ? "bg-destructive"
-                      : cardStatus === "warning"
-                        ? "status-warning"
-                        : "bg-accent",
-                  )}
-                  style={{ width: `${thresholdPct}%` }}
-                />
-              </div>
-            </div>
+              <RefreshCw
+                size={12}
+                className={cn(isRetrying && "animate-spin")}
+                aria-hidden="true"
+              />
+              Retry
+            </Button>
           )}
         </CardContent>
       </Card>
-    </motion.div>
-  );
-}
+    );
+  }
 
-// ─── Filter Bar ───────────────────────────────────────────────────────────────
+  const segments = memorySegments(overview.memory);
+  const totalMemory =
+    overview.memory.heapBytes +
+    overview.memory.stableBytes +
+    overview.memory.wasmBytes;
 
-const FILTER_PILLS: { key: StatusFilter; label: string; className: string }[] =
-  [
-    { key: "all", label: "All", className: "" },
-    { key: "healthy", label: "Healthy", className: "status-healthy" },
-    { key: "warning", label: "Warning", className: "status-warning" },
-    { key: "critical", label: "Critical", className: "status-critical" },
-    { key: "error", label: "Error", className: "status-stopped" },
-  ];
-
-const SORT_OPTIONS: { value: SortKey; label: string }[] = [
-  { value: "balance-desc", label: "Balance: High → Low" },
-  { value: "balance-asc", label: "Balance: Low → High" },
-  { value: "name-asc", label: "Name: A → Z" },
-  { value: "days-asc", label: "Days Remaining" },
-];
-
-function FilterBar({
-  statusFilter,
-  sortKey,
-  onStatusChange,
-  onSortChange,
-}: {
-  statusFilter: StatusFilter;
-  sortKey: SortKey;
-  onStatusChange: (s: StatusFilter) => void;
-  onSortChange: (s: SortKey) => void;
-}) {
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-      {/* Status filter pills */}
-      <div
-        className="flex items-center gap-1.5 flex-wrap"
-        data-ocid="filter.bar"
-      >
-        {FILTER_PILLS.map((pill) => {
-          const active = statusFilter === pill.key;
-          return (
-            <button
-              key={pill.key}
-              type="button"
-              onClick={() => onStatusChange(pill.key)}
-              aria-pressed={active}
-              data-ocid={`filter.tab.${pill.key}`}
-              className={cn(
-                "px-3 py-1.5 rounded-full text-xs font-medium transition-smooth border",
-                active
-                  ? cn(
-                      "border-transparent",
-                      pill.className || "bg-primary text-primary-foreground",
-                    )
-                  : "border-border bg-muted/30 text-muted-foreground hover:text-foreground hover:bg-muted/60",
-              )}
-            >
-              {pill.label}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Sort dropdown */}
-      <div className="flex items-center gap-2 shrink-0">
-        <span className="text-xs text-muted-foreground hidden sm:block">
-          Sort:
-        </span>
-        <Select
-          value={sortKey}
-          onValueChange={(v) => onSortChange(v as SortKey)}
-        >
-          <SelectTrigger
-            className="w-full sm:w-52 h-9 text-xs"
-            data-ocid="sort.select"
-            aria-label="Sort canisters"
-          >
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {SORT_OPTIONS.map((opt) => (
-              <SelectItem
-                key={opt.value}
-                value={opt.value}
-                data-ocid={`sort.option.${opt.value}`}
-              >
-                {opt.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-    </div>
-  );
-}
-
-// ─── Empty State ──────────────────────────────────────────────────────────────
-
-function EmptyState({ onConnect }: { onConnect: () => void }) {
-  return (
-    <div className="space-y-4">
-      <Card
-        className="border-dashed border-2 border-border bg-card/50"
-        data-ocid="canister.empty_state"
-      >
-        <CardContent className="p-8 sm:p-12 text-center space-y-4">
-          <div className="w-14 h-14 rounded-2xl bg-primary/15 border border-primary/25 flex items-center justify-center mx-auto">
-            <Server size={26} className="text-primary" />
+    <Card className="border-border bg-card" data-ocid="detail-panel">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-sm font-display flex items-center gap-2">
+          <HardDrive size={14} className="text-primary" aria-hidden="true" />
+          Memory breakdown
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <MemoryBar memory={overview.memory} showLegend />
+        <div className="space-y-0">
+          {segments.map((segment) => (
+            <div key={segment.key} className="settings-row">
+              <span className="settings-row-label">{segment.label}</span>
+              <span className="flex items-center gap-3">
+                <span className="settings-row-value">
+                  {formatBytes(segment.bytes)}
+                </span>
+                <span className="settings-row-hint tabular-nums">
+                  {segment.percent.toFixed(1)}%
+                </span>
+              </span>
+            </div>
+          ))}
+          <div className="settings-row">
+            <span className="settings-row-label">Total</span>
+            <span className="settings-row-value">
+              {formatBytes(totalMemory)}
+            </span>
           </div>
-          <div className="space-y-1.5">
-            <h3 className="text-lg font-display font-semibold text-foreground">
-              No canisters connected
-            </h3>
-            <p className="text-sm text-muted-foreground max-w-sm mx-auto">
-              Connect your first ICP canister to start monitoring cycle
-              balances, burn rates, and receive threshold alerts.
-            </p>
-          </div>
-          <Button
-            onClick={onConnect}
-            className="bg-primary text-primary-foreground hover:bg-primary/90 transition-smooth gap-2"
-            data-ocid="canister.connect_first_button"
-          >
-            <PlusCircle size={15} />
-            Connect Your First Canister
-          </Button>
-        </CardContent>
-      </Card>
-      <ConnectCanisterPanel />
-    </div>
-  );
-}
-
-// ─── Error State ──────────────────────────────────────────────────────────────
-
-function ErrorState({ onRetry }: { onRetry: () => void }) {
-  return (
-    <Card
-      className="border-destructive/30 bg-destructive/5"
-      data-ocid="canister.error_state"
-    >
-      <CardContent className="p-8 text-center space-y-4">
-        <div className="w-14 h-14 rounded-2xl bg-destructive/15 border border-destructive/25 flex items-center justify-center mx-auto">
-          <AlertCircle size={26} className="text-destructive" />
         </div>
-        <div className="space-y-1.5">
-          <h3 className="text-lg font-display font-semibold text-foreground">
-            Failed to load canisters
-          </h3>
-          <p className="text-sm text-muted-foreground max-w-sm mx-auto">
-            We couldn't fetch your monitored canisters. Check your connection
-            and try again.
-          </p>
-        </div>
-        <Button
-          variant="outline"
-          onClick={onRetry}
-          className="border-border text-foreground hover:bg-muted/60 transition-smooth gap-2"
-          data-ocid="canister.retry_button"
-        >
-          <RefreshCw size={14} />
-          Retry
-        </Button>
       </CardContent>
     </Card>
   );
 }
 
-// ─── Loading Skeletons ────────────────────────────────────────────────────────
+// ─── Settings panel ───────────────────────────────────────────────────────────
 
-function SkeletonGrid() {
+function SettingsPanel({
+  overview,
+  canisterId,
+  onReup,
+}: {
+  overview: CanisterOverview | undefined;
+  canisterId: string | null;
+  onReup: () => void;
+}) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-      {["sk0", "sk1", "sk2", "sk3", "sk4", "sk5"].map((sk) => (
-        <Card key={sk}>
-          <CardContent className="p-4 space-y-3">
-            <Skeleton className="h-4 w-32" />
-            <Skeleton className="h-8 w-24" />
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-1.5 w-full" />
-          </CardContent>
-        </Card>
-      ))}
-    </div>
+    <Card className="border-border bg-card" data-ocid="settings-panel">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-sm font-display flex items-center gap-2">
+          <Cpu size={14} className="text-primary" aria-hidden="true" />
+          Canister settings
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="space-y-0">
+          <div className="settings-row">
+            <span className="settings-row-label">Compute allocation</span>
+            <span className="settings-row-value">
+              {overview ? overview.settings.computeAllocation.toString() : "—"}
+            </span>
+          </div>
+          <div className="settings-row">
+            <span className="settings-row-label">Memory allocation</span>
+            <span className="settings-row-value">
+              {overview ? formatBytes(overview.settings.memoryAllocation) : "—"}
+            </span>
+          </div>
+          <div className="settings-row">
+            <span className="settings-row-label">Freezing threshold</span>
+            <span className="settings-row-value">
+              {overview
+                ? `${overview.settings.freezingThreshold.toString()}s`
+                : "—"}
+            </span>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <Button
+            type="button"
+            onClick={onReup}
+            disabled={!canisterId}
+            data-ocid="reup-button"
+            className="w-full bg-accent text-accent-foreground hover:bg-accent/90 transition-smooth"
+          >
+            <Zap size={14} aria-hidden="true" />
+            Re-up cycles
+            <ArrowUpRight size={13} aria-hidden="true" />
+          </Button>
+          <p className="text-xs text-muted-foreground">
+            Opens the official NNS canister management UI in a new tab to top up
+            the selected canister.
+          </p>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
-// ─── Main Dashboard Page ──────────────────────────────────────────────────────
+// ─── Empty state ──────────────────────────────────────────────────────────────
+
+function EmptyState() {
+  return (
+    <Card
+      className="border-dashed border-2 border-border bg-card/50"
+      data-ocid="empty_state"
+    >
+      <CardContent className="flex flex-col items-center gap-3 px-6 py-12 text-center">
+        <div className="flex h-11 w-11 items-center justify-center rounded-lg border border-primary/25 bg-primary/15">
+          <Server size={19} className="text-primary" aria-hidden="true" />
+        </div>
+        <div className="space-y-1">
+          <p className="font-display text-base font-semibold text-foreground">
+            No canisters yet
+          </p>
+          <p className="max-w-sm text-sm text-muted-foreground">
+            Add a canister by its principal ID to monitor cycle balance, burn
+            rate, runway, and memory side by side.
+          </p>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+// ─── Main dashboard ───────────────────────────────────────────────────────────
 
 export function DashboardPage() {
-  const navigate = useNavigate();
-  const queryClient = useQueryClient();
   const { autoRefresh, toggleAutoRefresh } = useAutoRefresh();
-  const { canisters, isLoading, error, refetch } = useMonitoredCanisters();
+  const [copied, setCopied] = useState(false);
 
-  // URL search params for filter/sort persistence
-  const search = useSearch({ from: "/dashboard" }) as DashboardSearch;
-  const statusFilter = (search.status as StatusFilter) || "all";
-  const sortKey = (search.sort as SortKey) || "balance-desc";
+  const { data: canisters, isLoading: canistersLoading } =
+    useManagedCanisters(autoRefresh);
+  const { data: activeCanisterId } = useActiveCanister(autoRefresh);
+  const setActiveCanister = useSetActiveCanister();
+  const removeCanister = useRemoveCanister();
 
-  const [refreshing, setRefreshing] = useState(false);
-  const [showConnectPanel, setShowConnectPanel] = useState(false);
+  const {
+    overviews,
+    isLoading: overviewsLoading,
+    error: overviewsError,
+    refetchAll,
+  } = useCanisterOverviews(canisters, autoRefresh);
 
-  const updateSearch = (updates: Partial<DashboardSearch>) => {
-    navigate({
-      to: "/dashboard",
-      search: { ...search, ...updates },
-      replace: true,
+  const aggregate = useCanisterAggregate(overviews);
+
+  const { data: rate, isLoading: rateLoading } =
+    useIcpToCyclesRate(autoRefresh);
+  const refreshRate = useRefreshIcpToCyclesRate();
+
+  const list = canisters ?? [];
+  const activeOverview = overviews.find(
+    (overview) => overview.canisterId === activeCanisterId,
+  );
+
+  const handleSelect = (canisterId: string) => {
+    if (canisterId === activeCanisterId) return;
+    setActiveCanister.mutate(canisterId, {
+      onError: (err: Error) => toast.error(formatICError(err)),
     });
   };
 
-  // Fetch all card statuses for aggregate stats
-  const allStatuses = useMemo(() => {
-    return canisters.map((c) => c.canisterId);
-  }, [canisters]);
-
-  const handleRefreshAll = async () => {
-    setRefreshing(true);
-    await refetch();
-    queryClient.invalidateQueries({ queryKey: ["canisterStatus"] });
-    queryClient.invalidateQueries({ queryKey: ["canisterBalance"] });
-    setTimeout(() => setRefreshing(false), 600);
+  const handleRemove = (canisterId: string) => {
+    removeCanister.mutate(canisterId, {
+      onSuccess: () => toast.success("Canister removed from the panel."),
+      onError: (err: Error) => toast.error(formatICError(err)),
+    });
   };
 
-  // Aggregate stats — we need balances. Since useMonitoredCanisters returns
-  // MonitoredCanister (no balance), we read cached canisterStatus queries.
-  const stats = useMemo(() => {
-    let totalCycles = BigInt(0);
-    let belowThresholdCount = 0;
+  const handleReup = () => {
+    if (!activeCanisterId) return;
+    window.open(
+      `${NNS_CANISTER_URL}/${activeCanisterId}`,
+      "_blank",
+      "noopener,noreferrer",
+    );
+  };
 
-    for (const id of allStatuses) {
-      const cached = queryClient.getQueryData<CanisterStatusInfo>([
-        "canisterStatus",
-        id,
-      ]);
-      if (cached) {
-        totalCycles += cached.balance;
-        if (cached.belowThreshold) belowThresholdCount += 1;
-      }
+  const handleCopyRate = async () => {
+    if (!rate) return;
+    try {
+      await navigator.clipboard.writeText(
+        formatIcpToCyclesRate(rate.icpPerXdr),
+      );
+      setCopied(true);
+      toast.success("Rate copied to clipboard.");
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast.error("Could not copy the rate.");
     }
+  };
 
-    return {
-      totalCanisters: allStatuses.length,
-      totalCycles,
-      belowThresholdCount,
-    };
-  }, [allStatuses, queryClient]);
-
-  // Filter + sort the canister list
-  const filteredCanisters = useMemo(() => {
-    let list = [...canisters];
-
-    // Status filter — needs cached status data
-    if (statusFilter !== "all") {
-      list = list.filter((c) => {
-        const cached = queryClient.getQueryData<CanisterStatusInfo>([
-          "canisterStatus",
-          c.canisterId,
-        ]);
-        if (!cached) return false;
-        const cardStatus = deriveCardStatus(cached);
-        if (statusFilter === "error") return cardStatus === "stopped";
-        return cardStatus === statusFilter;
-      });
-    }
-
-    // Sort
-    list.sort((a, b) => {
-      const aStatus = queryClient.getQueryData<CanisterStatusInfo>([
-        "canisterStatus",
-        a.canisterId,
-      ]);
-      const bStatus = queryClient.getQueryData<CanisterStatusInfo>([
-        "canisterStatus",
-        b.canisterId,
-      ]);
-      const aBalance = aStatus?.balance ?? BigInt(0);
-      const bBalance = bStatus?.balance ?? BigInt(0);
-
-      switch (sortKey) {
-        case "balance-desc":
-          return bBalance > aBalance ? 1 : bBalance < aBalance ? -1 : 0;
-        case "balance-asc":
-          return aBalance > bBalance ? 1 : aBalance < bBalance ? -1 : 0;
-        case "name-asc":
-          return a.canisterId.localeCompare(b.canisterId);
-        case "days-asc":
-          // Approximate days remaining from balance (lower = sooner)
-          return aBalance > bBalance ? 1 : aBalance < bBalance ? -1 : 0;
-        default:
-          return 0;
-      }
-    });
-
-    return list;
-  }, [canisters, statusFilter, sortKey, queryClient]);
+  const hasCanisters = list.length > 0;
 
   return (
-    <div className="p-3 sm:p-6 max-w-[1200px] mx-auto space-y-4 sm:space-y-6">
-      {/* Page header + refresh controls */}
-      <motion.div
+    <div
+      className="mx-auto max-w-7xl space-y-4 p-3 sm:p-6"
+      data-ocid="dashboard.page"
+    >
+      {/* Header */}
+      <motion.header
         initial={{ opacity: 0, y: -12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.35 }}
-        className="flex items-start justify-between gap-4 flex-wrap"
+        className="flex flex-wrap items-start justify-between gap-4"
       >
-        <div>
-          <h1 className="text-xl sm:text-2xl font-display font-bold text-foreground">
-            Dashboard
+        <div className="min-w-0">
+          <h1 className="font-display text-xl font-bold text-foreground sm:text-2xl">
+            Canister operations
           </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Monitor cycle balances across all your ICP canisters.
+          <p className="mt-1 text-sm text-muted-foreground">
+            Monitor cycle balance, burn rate, runway, and memory across every
+            canister you manage.
           </p>
         </div>
 
-        <div className="flex items-center gap-1.5 shrink-0">
-          {/* Add canister toggle */}
-          <Button
-            variant="default"
-            size="sm"
-            onClick={() => setShowConnectPanel((v) => !v)}
-            aria-pressed={showConnectPanel}
-            aria-expanded={showConnectPanel}
-            aria-controls="connect-canister-panel"
-            data-ocid="add_canister.toggle_button"
-            className="bg-primary text-primary-foreground hover:bg-primary/90 transition-smooth h-9 px-3 gap-1.5"
-          >
-            <PlusCircle size={14} />
-            <span className="hidden sm:inline">Add Canister</span>
-          </Button>
-
-          {/* Auto-refresh toggle */}
+        <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={toggleAutoRefresh}
@@ -651,9 +815,9 @@ export function DashboardPage() {
             aria-label={
               autoRefresh ? "Disable auto-refresh" : "Enable auto-refresh"
             }
-            data-ocid="auto_refresh.toggle"
+            data-ocid="auto-refresh-toggle"
             className={cn(
-              "flex items-center gap-1.5 rounded-full border px-2.5 py-1.5 text-[11px] font-medium transition-smooth",
+              "flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium transition-smooth",
               autoRefresh
                 ? "border-accent/40 bg-accent/10 text-accent"
                 : "border-border bg-muted/30 text-muted-foreground hover:text-foreground",
@@ -661,134 +825,232 @@ export function DashboardPage() {
           >
             <span
               className={cn(
-                "w-1.5 h-1.5 rounded-full shrink-0",
-                autoRefresh ? "bg-accent animate-pulse" : "bg-muted-foreground",
+                "h-1.5 w-1.5 shrink-0 rounded-full",
+                autoRefresh ? "animate-pulse bg-accent" : "bg-muted-foreground",
               )}
+              aria-hidden="true"
             />
-            <span className="hidden sm:inline">
-              {autoRefresh ? "Live" : "Paused"}
-            </span>
+            {autoRefresh ? "Live" : "Paused"}
           </button>
-
-          {/* Manual refresh all */}
           <Button
+            type="button"
             variant="ghost"
             size="sm"
-            onClick={handleRefreshAll}
-            disabled={refreshing}
-            aria-label="Refresh all canisters"
-            data-ocid="refresh_all.button"
-            className="text-muted-foreground hover:text-foreground transition-smooth h-9 px-3 gap-1.5"
+            onClick={() => refetchAll()}
+            aria-label="Refresh canister telemetry"
+            data-ocid="refresh-button"
+            className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground transition-smooth"
           >
-            <RefreshCw size={14} className={refreshing ? "animate-spin" : ""} />
-            <span className="hidden sm:inline">Refresh All</span>
+            <RefreshCw size={14} aria-hidden="true" />
           </Button>
         </div>
-      </motion.div>
+      </motion.header>
 
-      {/* Collapsible connect-canister panel */}
-      <AnimatePresence initial={false}>
-        {showConnectPanel && (
-          <motion.div
-            id="connect-canister-panel"
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.25, ease: "easeOut" }}
-            className="overflow-hidden"
-          >
-            <ConnectCanisterPanel />
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Aggregate summary header */}
+      {/* Live ICP-to-Cycles rate */}
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.05 }}
-        className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4"
+        className="surface-inset flex flex-wrap items-center justify-between gap-3 px-4 py-3"
+        data-ocid="rate-panel"
+      >
+        <div className="flex items-center gap-2.5">
+          <Gauge
+            size={15}
+            className="shrink-0 text-accent"
+            aria-hidden="true"
+          />
+          <div className="min-w-0">
+            <p className="stat-label">ICP to Cycles rate</p>
+            <p
+              className="font-mono text-sm font-semibold tabular-nums text-foreground"
+              data-ocid="rate-value"
+            >
+              {rateLoading
+                ? "Loading…"
+                : rate
+                  ? formatIcpToCyclesRate(rate.icpPerXdr)
+                  : "Unavailable"}
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <span
+            className="text-xs text-muted-foreground"
+            data-ocid="rate-updated-at"
+          >
+            Updated {formatUpdatedAt(rate?.updatedAt)}
+          </span>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={handleCopyRate}
+            disabled={!rate}
+            aria-label="Copy ICP to Cycles rate"
+            data-ocid="copy-rate-button"
+            className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground transition-smooth"
+          >
+            {copied ? (
+              <Check size={13} className="text-accent" aria-hidden="true" />
+            ) : (
+              <Copy size={13} aria-hidden="true" />
+            )}
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => refreshRate.mutate()}
+            disabled={refreshRate.isPending}
+            aria-label="Refresh rate from the CMC"
+            data-ocid="refresh-rate-button"
+            className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground transition-smooth"
+          >
+            <RefreshCw
+              size={13}
+              className={cn(refreshRate.isPending && "animate-spin")}
+              aria-hidden="true"
+            />
+          </Button>
+        </div>
+      </motion.div>
+
+      {/* Aggregate stat cards */}
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.1 }}
+        className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4"
       >
         <StatCard
-          label="Total Canisters"
+          label="Total cycle balance"
           value={
-            isLoading ? <Skeleton className="h-7 w-16" /> : stats.totalCanisters
-          }
-          icon={Server}
-        />
-        <StatCard
-          label="Total Cycles"
-          value={
-            isLoading ? (
+            overviewsLoading && !hasCanisters ? (
               <Skeleton className="h-7 w-28" />
             ) : (
-              formatCycles(stats.totalCycles)
+              formatCycles(aggregate.totalCycleBalance)
             )
           }
+          sub={`Across ${aggregate.canisterCount} canister${aggregate.canisterCount === 1 ? "" : "s"}`}
           icon={Zap}
-          mono
-          variant="accent"
+          accent
         />
         <StatCard
-          label="Below Threshold"
+          label="Aggregate burn rate"
           value={
-            isLoading ? (
-              <Skeleton className="h-7 w-16" />
+            overviewsLoading && !hasCanisters ? (
+              <Skeleton className="h-7 w-28" />
             ) : (
-              stats.belowThresholdCount
+              formatBurnRate(aggregate.totalBurnRateCyclesPerDay)
             )
           }
+          sub="Combined cycles consumed per second"
+          icon={TrendingDown}
+        />
+        <StatCard
+          label="Minimum runway"
+          value={
+            overviewsLoading && !hasCanisters ? (
+              <Skeleton className="h-7 w-20" />
+            ) : (
+              formatRunway(aggregate.minRunwayDays)
+            )
+          }
+          sub="Shortest estimated time to exhaustion"
           icon={Gauge}
-          variant={stats.belowThresholdCount > 0 ? "critical" : "default"}
         />
       </motion.div>
 
-      {/* Filter / Sort bar */}
-      {!isLoading && !error && canisters.length > 0 && (
-        <FilterBar
-          statusFilter={statusFilter}
-          sortKey={sortKey}
-          onStatusChange={(s) => updateSearch({ status: s })}
-          onSortChange={(s) => updateSearch({ sort: s })}
-        />
-      )}
-
-      {/* Content: loading / error / empty / grid */}
-      {isLoading ? (
-        <SkeletonGrid />
-      ) : error ? (
-        <ErrorState onRetry={() => refetch()} />
-      ) : canisters.length === 0 ? (
-        <EmptyState onConnect={() => setShowConnectPanel(true)} />
-      ) : filteredCanisters.length === 0 ? (
-        <Card data-ocid="canister.empty_state">
-          <CardContent className="p-8 text-center space-y-2">
-            <p className="text-sm text-muted-foreground">
-              No canisters match the current filter.
+      {/* Error banner */}
+      {overviewsError && hasCanisters && (
+        <div
+          className="flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/5 px-4 py-3"
+          data-ocid="error_state"
+          role="alert"
+        >
+          <AlertCircle
+            size={15}
+            className="mt-0.5 shrink-0 text-destructive"
+            aria-hidden="true"
+          />
+          <div className="min-w-0 space-y-1">
+            <p className="text-sm font-medium text-foreground">
+              Some canister telemetry could not be read
             </p>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => updateSearch({ status: "all" })}
-              className="border-border text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-smooth"
-              data-ocid="filter.reset_button"
-            >
-              Clear filter
-            </Button>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-          {filteredCanisters.map((c, i) => (
-            <CanisterCard
-              key={c.canisterId}
-              canisterId={c.canisterId}
-              index={i}
-              autoRefresh={autoRefresh}
-            />
-          ))}
+            <p className="text-xs text-muted-foreground break-words">
+              {formatICError(overviewsError)}
+            </p>
+          </div>
         </div>
       )}
+
+      {/* Rail + comparison */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.15 }}
+        className="grid grid-cols-1 gap-3 lg:grid-cols-[17rem_minmax(0,1fr)] sm:gap-4"
+      >
+        <CanisterRail
+          canisters={list}
+          activeCanisterId={activeCanisterId ?? null}
+          onSelect={handleSelect}
+          isSwitching={setActiveCanister.isPending}
+        />
+
+        {canistersLoading ? (
+          <Card className="border-border bg-card" data-ocid="loading_state">
+            <CardContent className="space-y-3 p-4">
+              <Skeleton className="h-4 w-40" />
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full" />
+            </CardContent>
+          </Card>
+        ) : hasCanisters ? (
+          <ComparisonTable
+            canisters={list}
+            overviews={overviews}
+            activeCanisterId={activeCanisterId ?? null}
+            onSelect={handleSelect}
+            onRemove={handleRemove}
+            isRemoving={removeCanister.isPending}
+            isLoading={overviewsLoading}
+          />
+        ) : (
+          <EmptyState />
+        )}
+      </motion.div>
+
+      {/* Active canister detail + settings */}
+      {hasCanisters && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.2 }}
+          className="grid grid-cols-1 gap-3 lg:grid-cols-2 sm:gap-4"
+        >
+          <ActiveCanisterDetail
+            overview={activeOverview}
+            isLoading={overviewsLoading}
+            error={overviewsError}
+            onRetry={() => refetchAll()}
+            isRetrying={overviewsLoading}
+          />
+          <SettingsPanel
+            overview={activeOverview}
+            canisterId={activeCanisterId ?? null}
+            onReup={handleReup}
+          />
+        </motion.div>
+      )}
+
+      {/* Rate source attribution */}
+      <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+        <ExternalLink size={11} aria-hidden="true" />
+        ICP-to-Cycles rate sourced live from the CMC (Cycles Minting Canister).
+      </p>
     </div>
   );
 }

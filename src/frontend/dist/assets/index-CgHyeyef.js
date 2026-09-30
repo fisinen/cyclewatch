@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["assets/DashboardPage-2ooBA2q-.js","assets/useCanisterStatus-DwfuKtvl.js","assets/CanisterDetailPage-BuCS2DrC.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["assets/DashboardPage-D8NyNNJD.js","assets/formatCycles-BoTNfZET.js","assets/useManagedCanisters-C06wjhjv.js","assets/useIcpToCyclesRate-CpbmEfwP.js","assets/ActivityPage-BsCw7ktt.js","assets/AccountPage-AiFIPKME.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __typeError = (msg) => {
   throw TypeError(msg);
@@ -75,7 +75,6 @@ function _mergeNamespaces(n, m2) {
     fetch(link.href, fetchOpts);
   }
 })();
-var commonjsGlobal = typeof globalThis !== "undefined" ? globalThis : typeof window !== "undefined" ? window : typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : {};
 function getDefaultExportFromCjs(x2) {
   return x2 && x2.__esModule && Object.prototype.hasOwnProperty.call(x2, "default") ? x2["default"] : x2;
 }
@@ -4474,14 +4473,14 @@ const p = 2 * 1024, C = 100, v = new TextEncoder();
 function S(t) {
   return t << 5;
 }
-let o = new Uint8Array(p), r$1 = new DataView(o.buffer), s = 0, O = [];
+let o$1 = new Uint8Array(p), r$1 = new DataView(o$1.buffer), s = 0, O = [];
 function dt(t, n) {
   s = 0;
   const e = (n == null ? void 0 : n(t)) ?? t;
-  return it(m, e, n), o.slice(0, s);
+  return it(m, e, n), o$1.slice(0, s);
 }
 function _(t, n) {
-  if (s > o.length - C && (o = R(o, o.length * 2), r$1 = new DataView(o.buffer)), t === false || t === true || t === null || t === void 0) {
+  if (s > o$1.length - C && (o$1 = R(o$1, o$1.length * 2), r$1 = new DataView(o$1.buffer)), t === false || t === true || t === null || t === void 0) {
     et(t);
     return;
   }
@@ -4574,7 +4573,7 @@ function st(t) {
   throw new x(`Unrecognized simple value: ${t.toString()}`);
 }
 function k(t, n) {
-  I(t, n.length), s > o.length - n.length && (o = R(o, o.length + n.length), r$1 = new DataView(o.buffer)), o.set(n, s), s += n.length;
+  I(t, n.length), s > o$1.length - n.length && (o$1 = R(o$1, o$1.length + n.length), r$1 = new DataView(o$1.buffer)), o$1.set(n, s), s += n.length;
 }
 function T(t, n) {
   I(t, n);
@@ -10725,11 +10724,10 @@ async function loadConfig() {
       console.error("CANISTER_ID_BACKEND is not set");
       throw new Error("CANISTER_ID_BACKEND is not set");
     }
-    const runtimeStorageGatewayUrl = config.storage_gateway_url && config.storage_gateway_url !== "undefined" ? config.storage_gateway_url : void 0;
     const fullConfig = {
       backend_host: config.backend_host === "undefined" ? void 0 : config.backend_host,
       backend_canister_id: config.backend_canister_id === "undefined" ? backendCanisterId : config.backend_canister_id,
-      storage_gateway_url: runtimeStorageGatewayUrl ?? "https://blob.caffeine.ai" ?? "nogateway",
+      storage_gateway_url: "https://blob.caffeine.ai",
       bucket_name: DEFAULT_BUCKET_NAME,
       project_id: config.project_id !== "undefined" ? config.project_id : DEFAULT_PROJECT_ID,
       ii_derivation_origin: config.ii_derivation_origin === "undefined" ? void 0 : config.ii_derivation_origin
@@ -13235,10 +13233,10 @@ react_production.version = "19.1.5";
   react.exports = react_production;
 }
 var reactExports = react.exports;
-const React$4 = /* @__PURE__ */ getDefaultExportFromCjs(reactExports);
-const React$5 = /* @__PURE__ */ _mergeNamespaces({
+const o = /* @__PURE__ */ getDefaultExportFromCjs(reactExports);
+const React$4 = /* @__PURE__ */ _mergeNamespaces({
   __proto__: null,
-  default: React$4
+  default: o
 }, [reactExports]);
 var QueryClientContext = reactExports.createContext(
   void 0
@@ -14679,17 +14677,13 @@ function InternetIdentityProvider({ children, createOptions }) {
         if (isAuthenticated) {
           const loadedIdentity = existingClient.getIdentity();
           setIdentity(loadedIdentity);
-          setStatus("success");
-        } else {
-          setIdentity(void 0);
-          setStatus("idle");
         }
       } catch (unknownError) {
-        if (cancelled)
-          return;
-        setIdentity(void 0);
         setStatus("loginError");
         setError(unknownError instanceof Error ? unknownError : new Error("Initialization failed"));
+      } finally {
+        if (!cancelled)
+          setStatus("idle");
       }
     })();
     return () => {
@@ -14706,7 +14700,6 @@ function InternetIdentityProvider({ children, createOptions }) {
     isLoggingIn: loginStatus === "logging-in",
     isLoginSuccess: loginStatus === "success",
     isLoginError: loginStatus === "loginError",
-    isAuthenticated: !!identity && !identity.getPrincipal().isAnonymous(),
     loginError
   }), [identity, login, clear, loginStatus, loginError]);
   return reactExports.createElement(InternetIdentityReactContext.Provider, {
@@ -15147,7 +15140,7 @@ function checkDCE$1() {
   reactDom.exports = reactDom_production;
 }
 var reactDomExports = reactDom.exports;
-const ReactDOM$2 = /* @__PURE__ */ getDefaultExportFromCjs(reactDomExports);
+const vt = /* @__PURE__ */ getDefaultExportFromCjs(reactDomExports);
 /**
  * @license React
  * react-dom-client.production.js
@@ -30203,10 +30196,10 @@ function ErrorComponent({ error }) {
   ] });
 }
 function ClientOnly({ children, fallback = null }) {
-  return useHydrated() ? /* @__PURE__ */ jsxRuntimeExports.jsx(React$4.Fragment, { children }) : /* @__PURE__ */ jsxRuntimeExports.jsx(React$4.Fragment, { children: fallback });
+  return useHydrated() ? /* @__PURE__ */ jsxRuntimeExports.jsx(o.Fragment, { children }) : /* @__PURE__ */ jsxRuntimeExports.jsx(o.Fragment, { children: fallback });
 }
 function useHydrated() {
-  return React$4.useSyncExternalStore(
+  return o.useSyncExternalStore(
     subscribe,
     () => true,
     () => false
@@ -30820,7 +30813,7 @@ const composeHandlers = (handlers) => (e) => {
     handler(e);
   }
 };
-const Link = reactExports.forwardRef(
+const Link$1 = reactExports.forwardRef(
   (props, ref) => {
     const { _asChild, ...rest } = props;
     const {
@@ -30890,9 +30883,9 @@ class Route extends BaseRoute {
     this.useNavigate = () => {
       return useNavigate({ from: this.fullPath });
     };
-    this.Link = React$4.forwardRef(
+    this.Link = o.forwardRef(
       (props, ref) => {
-        return /* @__PURE__ */ jsxRuntimeExports.jsx(Link, { ref, from: this.fullPath, ...props });
+        return /* @__PURE__ */ jsxRuntimeExports.jsx(Link$1, { ref, from: this.fullPath, ...props });
       }
     );
     this.$$typeof = Symbol.for("react.memo");
@@ -30944,9 +30937,9 @@ class RootRoute extends BaseRootRoute {
     this.useNavigate = () => {
       return useNavigate({ from: this.fullPath });
     };
-    this.Link = React$4.forwardRef(
+    this.Link = o.forwardRef(
       (props, ref) => {
-        return /* @__PURE__ */ jsxRuntimeExports.jsx(Link, { ref, from: this.fullPath, ...props });
+        return /* @__PURE__ */ jsxRuntimeExports.jsx(Link$1, { ref, from: this.fullPath, ...props });
       }
     );
     this.$$typeof = Symbol.for("react.memo");
@@ -31530,11 +31523,8 @@ function composeRefs$1(...refs) {
     }
   };
 }
-function useComposedRefs$1(...refs) {
-  return reactExports.useCallback(composeRefs$1(...refs), refs);
-}
 var REACT_LAZY_TYPE = Symbol.for("react.lazy");
-var use = React$5[" use ".trim().toString()];
+var use = React$4[" use ".trim().toString()];
 function isPromiseLike(value) {
   return typeof value === "object" && value !== null && "then" in value;
 }
@@ -34332,7 +34322,7 @@ const createLucideIcon = (iconName, iconNode) => {
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$e = [
+const __iconNode$i = [
   [
     "path",
     {
@@ -34341,7 +34331,42 @@ const __iconNode$e = [
     }
   ]
 ];
-const Activity = createLucideIcon("activity", __iconNode$e);
+const Activity = createLucideIcon("activity", __iconNode$i);
+/**
+ * @license lucide-react v0.511.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$h = [
+  ["path", { d: "M5 12h14", key: "1ays0h" }],
+  ["path", { d: "m12 5 7 7-7 7", key: "xquz4c" }]
+];
+const ArrowRight = createLucideIcon("arrow-right", __iconNode$h);
+/**
+ * @license lucide-react v0.511.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$g = [["path", { d: "M20 6 9 17l-5-5", key: "1gmf2c" }]];
+const Check = createLucideIcon("check", __iconNode$g);
+/**
+ * @license lucide-react v0.511.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$f = [["path", { d: "m15 18-6-6 6-6", key: "1wnfg3" }]];
+const ChevronLeft = createLucideIcon("chevron-left", __iconNode$f);
+/**
+ * @license lucide-react v0.511.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$e = [["path", { d: "m9 18 6-6-6-6", key: "mthhwq" }]];
+const ChevronRight = createLucideIcon("chevron-right", __iconNode$e);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -34349,34 +34374,63 @@ const Activity = createLucideIcon("activity", __iconNode$e);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$d = [
-  ["path", { d: "M5 12h14", key: "1ays0h" }],
-  ["path", { d: "m12 5 7 7-7 7", key: "xquz4c" }]
+  ["rect", { width: "14", height: "14", x: "8", y: "8", rx: "2", ry: "2", key: "17jyea" }],
+  ["path", { d: "M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2", key: "zix9uf" }]
 ];
-const ArrowRight = createLucideIcon("arrow-right", __iconNode$d);
+const Copy = createLucideIcon("copy", __iconNode$d);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$c = [["path", { d: "M20 6 9 17l-5-5", key: "1gmf2c" }]];
-const Check = createLucideIcon("check", __iconNode$c);
+const __iconNode$c = [
+  ["path", { d: "M15 3h6v6", key: "1q9fwt" }],
+  ["path", { d: "M10 14 21 3", key: "gplh6r" }],
+  ["path", { d: "M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6", key: "a6xqqp" }]
+];
+const ExternalLink = createLucideIcon("external-link", __iconNode$c);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$b = [["path", { d: "m15 18-6-6 6-6", key: "1wnfg3" }]];
-const ChevronLeft = createLucideIcon("chevron-left", __iconNode$b);
+const __iconNode$b = [
+  ["path", { d: "m12 14 4-4", key: "9kzdfg" }],
+  ["path", { d: "M3.34 19a10 10 0 1 1 17.32 0", key: "19p75a" }]
+];
+const Gauge = createLucideIcon("gauge", __iconNode$b);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$a = [["path", { d: "m9 18 6-6-6-6", key: "mthhwq" }]];
-const ChevronRight = createLucideIcon("chevron-right", __iconNode$a);
+const __iconNode$a = [
+  [
+    "path",
+    {
+      d: "M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83z",
+      key: "zw3jo"
+    }
+  ],
+  [
+    "path",
+    {
+      d: "M2 12a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 12",
+      key: "1wduqc"
+    }
+  ],
+  [
+    "path",
+    {
+      d: "M2 17a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 17",
+      key: "kqbvx6"
+    }
+  ]
+];
+const Layers = createLucideIcon("layers", __iconNode$a);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -34384,10 +34438,12 @@ const ChevronRight = createLucideIcon("chevron-right", __iconNode$a);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$9 = [
-  ["rect", { width: "14", height: "14", x: "8", y: "8", rx: "2", ry: "2", key: "17jyea" }],
-  ["path", { d: "M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2", key: "zix9uf" }]
+  ["rect", { width: "7", height: "9", x: "3", y: "3", rx: "1", key: "10lvy0" }],
+  ["rect", { width: "7", height: "5", x: "14", y: "3", rx: "1", key: "16une8" }],
+  ["rect", { width: "7", height: "9", x: "14", y: "12", rx: "1", key: "1hutg5" }],
+  ["rect", { width: "7", height: "5", x: "3", y: "16", rx: "1", key: "ldoo1y" }]
 ];
-const Copy = createLucideIcon("copy", __iconNode$9);
+const LayoutDashboard = createLucideIcon("layout-dashboard", __iconNode$9);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -34395,12 +34451,10 @@ const Copy = createLucideIcon("copy", __iconNode$9);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$8 = [
-  ["rect", { width: "7", height: "9", x: "3", y: "3", rx: "1", key: "10lvy0" }],
-  ["rect", { width: "7", height: "5", x: "14", y: "3", rx: "1", key: "16une8" }],
-  ["rect", { width: "7", height: "9", x: "14", y: "12", rx: "1", key: "1hutg5" }],
-  ["rect", { width: "7", height: "5", x: "3", y: "16", rx: "1", key: "ldoo1y" }]
+  ["path", { d: "M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71", key: "1cjeqo" }],
+  ["path", { d: "M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71", key: "19qd67" }]
 ];
-const LayoutDashboard = createLucideIcon("layout-dashboard", __iconNode$8);
+const Link = createLucideIcon("link", __iconNode$8);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -34484,10 +34538,10 @@ const Sun = createLucideIcon("sun", __iconNode$2);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$1 = [
-  ["path", { d: "M18 6 6 18", key: "1bl5f8" }],
-  ["path", { d: "m6 6 12 12", key: "d8bk6v" }]
+  ["path", { d: "M16 17h6v-6", key: "t6n2it" }],
+  ["path", { d: "m22 17-8.5-8.5-5 5L2 7", key: "x473p" }]
 ];
-const X = createLucideIcon("x", __iconNode$1);
+const TrendingDown = createLucideIcon("trending-down", __iconNode$1);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -34495,15 +34549,10 @@ const X = createLucideIcon("x", __iconNode$1);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode = [
-  [
-    "path",
-    {
-      d: "M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z",
-      key: "1xq2db"
-    }
-  ]
+  ["path", { d: "M18 6 6 18", key: "1bl5f8" }],
+  ["path", { d: "m6 6 12 12", key: "d8bk6v" }]
 ];
-const Zap = createLucideIcon("zap", __iconNode);
+const X = createLucideIcon("x", __iconNode);
 const LayoutGroupContext = reactExports.createContext({});
 function useConstant(init) {
   const ref = reactExports.useRef(null);
@@ -42583,17 +42632,17 @@ function NavLink({
   const routerState = useRouterState();
   const isActive = routerState.location.pathname === to || to !== "/" && routerState.location.pathname.startsWith(to);
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(
-    Link,
+    Link$1,
     {
       to,
-      "data-ocid": `nav-link-${label.toLowerCase()}`,
+      "data-ocid": `nav-link-${label.toLowerCase().replace(/\s+/g, "-")}`,
       title: collapsed ? label : void 0,
       "aria-label": collapsed ? label : void 0,
       onClick: onNavigate,
       className: cn(
-        "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
-        "hover:bg-primary/10 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-        isActive ? "bg-primary/15 text-primary shadow-sm" : "text-muted-foreground hover:text-foreground",
+        "group flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-smooth",
+        "hover:bg-surface-hover hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+        isActive ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground",
         collapsed && "justify-center px-2"
       ),
       "aria-current": isActive ? "page" : void 0,
@@ -42614,7 +42663,9 @@ function NavLink({
   );
 }
 const NAV_ITEMS = [
-  { to: "/dashboard", icon: LayoutDashboard, label: "Dashboard" }
+  { to: "/dashboard", icon: LayoutDashboard, label: "Canisters" },
+  { to: "/activity", icon: Activity, label: "Activity" },
+  { to: "/account", icon: Link, label: "Account" }
 ];
 function truncatePrincipal(principal) {
   if (principal.length <= 16) return principal;
@@ -42667,10 +42718,10 @@ function Layout() {
             isCollapsed ? "justify-center" : "gap-2.5"
           ),
           children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "w-8 h-8 rounded-lg bg-primary/20 border border-primary/30 flex items-center justify-center shrink-0", children: /* @__PURE__ */ jsxRuntimeExports.jsx(Zap, { size: 16, className: "text-primary" }) }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "w-8 h-8 rounded-md bg-primary/20 border border-primary/30 flex items-center justify-center shrink-0", children: /* @__PURE__ */ jsxRuntimeExports.jsx(Activity, { size: 16, className: "text-primary" }) }),
             !isCollapsed && /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "text-base font-display font-semibold text-foreground whitespace-nowrap overflow-hidden", children: [
               "Cycle",
-              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-primary", children: "Watch" })
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-accent", children: "Watch" })
             ] })
           ]
         }
@@ -42694,8 +42745,8 @@ function Layout() {
             isCollapsed && "flex flex-col items-center"
           ),
           children: [
-            !isCollapsed && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "bg-muted/60 rounded-lg px-3 py-2", children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-[10px] font-medium text-muted-foreground uppercase tracking-wide mb-1", children: "Principal" }),
+            !isCollapsed && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "surface-inset px-3 py-2", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-[10px] font-medium text-muted-foreground uppercase tracking-widest mb-1", children: "Principal" }),
               /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-1.5", children: [
                 /* @__PURE__ */ jsxRuntimeExports.jsx("code", { className: "text-xs font-mono text-foreground flex-1 min-w-0 truncate", children: truncatePrincipal(principalText) }),
                 /* @__PURE__ */ jsxRuntimeExports.jsx(
@@ -42719,7 +42770,7 @@ function Layout() {
                 onClick: () => clear(),
                 "data-ocid": "logout-btn",
                 className: cn(
-                  "text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-smooth",
+                  "text-muted-foreground hover:text-foreground hover:bg-surface-hover transition-smooth",
                   isCollapsed ? "w-9 h-9 p-0 justify-center" : "w-full justify-start gap-2 text-xs"
                 ),
                 "aria-label": "Sign out",
@@ -42751,7 +42802,7 @@ function Layout() {
               onClick: () => setCollapsed((c2) => !c2),
               "aria-label": collapsed ? "Expand sidebar" : "Collapse sidebar",
               "data-ocid": "sidebar-toggle",
-              className: "p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-smooth",
+              className: "p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-surface-hover transition-smooth",
               children: collapsed ? /* @__PURE__ */ jsxRuntimeExports.jsx(ChevronRight, { size: 14 }) : /* @__PURE__ */ jsxRuntimeExports.jsx(ChevronLeft, { size: 14 })
             }
           ) })
@@ -42789,7 +42840,7 @@ function Layout() {
                 onClick: () => setDrawerOpen(false),
                 "aria-label": "Close navigation",
                 "data-ocid": "drawer-close-btn",
-                className: "absolute top-4 right-3 p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-smooth z-10",
+                className: "absolute top-4 right-3 p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-surface-hover transition-smooth z-10",
                 children: /* @__PURE__ */ jsxRuntimeExports.jsx(X, { size: 16 })
               }
             ),
@@ -42800,7 +42851,7 @@ function Layout() {
       )
     ] }) }),
     /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col flex-1 min-w-0 overflow-hidden", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("header", { className: "h-16 bg-card border-b border-border flex items-center justify-between px-3 sm:px-6 shrink-0 shadow-sm", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("header", { className: "h-16 bg-card border-b border-border flex items-center justify-between px-3 sm:px-6 shrink-0 shadow-subtle", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2 min-w-0", children: [
           /* @__PURE__ */ jsxRuntimeExports.jsx(
             "button",
@@ -42809,7 +42860,7 @@ function Layout() {
               onClick: () => setDrawerOpen(true),
               "aria-label": "Open navigation",
               "data-ocid": "hamburger-btn",
-              className: "p-2 -ml-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-smooth md:hidden shrink-0",
+              className: "p-2 -ml-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-surface-hover transition-smooth md:hidden shrink-0",
               children: /* @__PURE__ */ jsxRuntimeExports.jsx(Menu, { size: 18 })
             }
           ),
@@ -42826,7 +42877,7 @@ function Layout() {
               onClick: toggleDark,
               "aria-label": isDark ? "Switch to light mode" : "Switch to dark mode",
               "data-ocid": "dark-mode-toggle",
-              className: "p-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-smooth",
+              className: "p-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-surface-hover transition-smooth",
               children: isDark ? /* @__PURE__ */ jsxRuntimeExports.jsx(Sun, { size: 16 }) : /* @__PURE__ */ jsxRuntimeExports.jsx(Moon, { size: 16 })
             }
           ),
@@ -42852,24 +42903,21 @@ function Layout() {
           children: /* @__PURE__ */ jsxRuntimeExports.jsx(Outlet, {})
         }
       ),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("footer", { className: "bg-muted/40 border-t border-border px-4 py-2.5 shrink-0", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col sm:flex-row items-center justify-between gap-1.5 sm:gap-4", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-[11px] text-muted-foreground text-center sm:text-left", children: [
-          "© ",
-          currentYear,
-          ".",
-          " ",
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
-            "a",
-            {
-              href: caffeineUrl,
-              target: "_blank",
-              rel: "noopener noreferrer",
-              className: "hover:text-foreground transition-colors duration-200",
-              children: "Built with love using caffeine.ai"
-            }
-          )
-        ] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-[11px] text-muted-foreground text-center sm:text-right", children: "Backend canister ID changes on redeploy — re-add it as a controller of your target canisters and reconnect after each redeploy." })
+      /* @__PURE__ */ jsxRuntimeExports.jsx("footer", { className: "h-10 bg-muted/40 border-t border-border flex items-center justify-center px-4 shrink-0", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-xs text-muted-foreground", children: [
+        "© ",
+        currentYear,
+        ".",
+        " ",
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "a",
+          {
+            href: caffeineUrl,
+            target: "_blank",
+            rel: "noopener noreferrer",
+            className: "hover:text-foreground transition-colors duration-200",
+            children: "Built with love using caffeine.ai"
+          }
+        )
       ] }) })
     ] })
   ] });
@@ -42891,16 +42939,16 @@ function LoginPage() {
         className: "relative w-full max-w-md",
         children: [
           /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex items-center justify-center mb-8", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2.5", children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "w-10 h-10 rounded-xl bg-primary/20 border border-primary/30 flex items-center justify-center shadow-lg", children: /* @__PURE__ */ jsxRuntimeExports.jsx(Zap, { size: 20, className: "text-primary" }) }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "w-10 h-10 rounded-xl bg-primary/20 border border-primary/30 flex items-center justify-center shadow-lg", children: /* @__PURE__ */ jsxRuntimeExports.jsx(Gauge, { size: 20, className: "text-primary" }) }),
             /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "text-xl font-display font-semibold text-foreground", children: [
               "Cycle",
-              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-primary", children: "Watch" })
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-accent", children: "Watch" })
             ] })
           ] }) }),
           /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "bg-card border border-border rounded-2xl shadow-xl p-8", children: [
             /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "text-center mb-8", children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { className: "text-2xl font-display font-bold text-foreground mb-2", children: "Monitor your canister cycles" }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground text-sm leading-relaxed", children: "Connect your ICP canisters to track cycle balances, burn rates, and depletion projections in one unified dashboard." })
+              /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { className: "text-2xl font-display font-bold text-foreground mb-2", children: "Monitor your canisters" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground text-sm leading-relaxed", children: "Sign in to track cycle balances, burn rate and runway across every canister you control." })
             ] }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "space-y-3 mb-8", children: features.map((feature, i) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
               motion.div,
@@ -42944,7 +42992,7 @@ function LoginPage() {
           ] }),
           /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-center text-xs text-muted-foreground mt-6 flex items-center justify-center gap-1.5", children: [
             /* @__PURE__ */ jsxRuntimeExports.jsx(Shield, { size: 12 }),
-            "Your identity and assets remain fully in your control"
+            "Your identity and canisters remain fully in your control"
           ] })
         ]
       }
@@ -42953,19 +43001,19 @@ function LoginPage() {
 }
 const features = [
   {
-    icon: Activity,
-    label: "Real-time cycle monitoring",
-    description: "Track cycle balances across all your canisters with live refresh"
+    icon: Layers,
+    label: "Manage multiple canisters",
+    description: "Add, switch between, and monitor every canister you control side by side"
   },
   {
-    icon: Zap,
-    label: "Multi-canister management",
-    description: "Connect any number of canisters and monitor them from one dashboard"
+    icon: TrendingDown,
+    label: "Cycles, burn rate and runway",
+    description: "Live cycle balance with burn rate and estimated days until exhaustion"
   },
   {
-    icon: ArrowRight,
-    label: "Cost projection & alerts",
-    description: "See burn rates, days remaining, and depletion dates at a glance"
+    icon: ExternalLink,
+    label: "Live ICP-to-Cycles rate",
+    description: "Rate sourced from the CMC, with a Re-up link to the official canister management UI"
   }
 ];
 function Skeleton({ className, ...props }) {
@@ -42979,21 +43027,22 @@ function Skeleton({ className, ...props }) {
   );
 }
 const DashboardPage = reactExports.lazy(
-  () => __vitePreload(() => import("./DashboardPage-2ooBA2q-.js"), true ? __vite__mapDeps([0,1]) : void 0).then((m2) => ({ default: m2.DashboardPage }))
+  () => __vitePreload(() => import("./DashboardPage-D8NyNNJD.js"), true ? __vite__mapDeps([0,1,2,3]) : void 0).then((m2) => ({ default: m2.DashboardPage }))
 );
-const CanisterDetailPage = reactExports.lazy(
-  () => __vitePreload(() => import("./CanisterDetailPage-BuCS2DrC.js"), true ? __vite__mapDeps([2,1]) : void 0).then((m2) => ({
-    default: m2.CanisterDetailPage
-  }))
+const ActivityPage = reactExports.lazy(
+  () => __vitePreload(() => import("./ActivityPage-BsCw7ktt.js"), true ? __vite__mapDeps([4,1,2]) : void 0).then((m2) => ({ default: m2.ActivityPage }))
+);
+const AccountPage = reactExports.lazy(
+  () => __vitePreload(() => import("./AccountPage-AiFIPKME.js"), true ? __vite__mapDeps([5,1,3]) : void 0).then((m2) => ({ default: m2.AccountPage }))
 );
 function PageLoader() {
   return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "p-6 space-y-4", children: [
     /* @__PURE__ */ jsxRuntimeExports.jsx(Skeleton, { className: "h-8 w-48" }),
     /* @__PURE__ */ jsxRuntimeExports.jsx(Skeleton, { className: "h-4 w-80" }),
     /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid grid-cols-1 md:grid-cols-3 gap-4 mt-6", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx(Skeleton, { className: "h-32 rounded-xl" }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(Skeleton, { className: "h-32 rounded-xl" }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(Skeleton, { className: "h-32 rounded-xl" })
+      /* @__PURE__ */ jsxRuntimeExports.jsx(Skeleton, { className: "h-32 rounded-lg" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(Skeleton, { className: "h-32 rounded-lg" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(Skeleton, { className: "h-32 rounded-lg" })
     ] })
   ] });
 }
@@ -43023,15 +43072,21 @@ const dashboardRoute = createRoute({
   path: "/dashboard",
   component: () => /* @__PURE__ */ jsxRuntimeExports.jsx(reactExports.Suspense, { fallback: /* @__PURE__ */ jsxRuntimeExports.jsx(PageLoader, {}), children: /* @__PURE__ */ jsxRuntimeExports.jsx(DashboardPage, {}) })
 });
-const canisterDetailRoute = createRoute({
+const activityRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: "/canister/$canisterId",
-  component: () => /* @__PURE__ */ jsxRuntimeExports.jsx(reactExports.Suspense, { fallback: /* @__PURE__ */ jsxRuntimeExports.jsx(PageLoader, {}), children: /* @__PURE__ */ jsxRuntimeExports.jsx(CanisterDetailPage, {}) })
+  path: "/activity",
+  component: () => /* @__PURE__ */ jsxRuntimeExports.jsx(reactExports.Suspense, { fallback: /* @__PURE__ */ jsxRuntimeExports.jsx(PageLoader, {}), children: /* @__PURE__ */ jsxRuntimeExports.jsx(ActivityPage, {}) })
+});
+const accountRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/account",
+  component: () => /* @__PURE__ */ jsxRuntimeExports.jsx(reactExports.Suspense, { fallback: /* @__PURE__ */ jsxRuntimeExports.jsx(PageLoader, {}), children: /* @__PURE__ */ jsxRuntimeExports.jsx(AccountPage, {}) })
 });
 const routeTree = rootRoute.addChildren([
   indexRoute,
   dashboardRoute,
-  canisterDetailRoute
+  activityRoute,
+  accountRoute
 ]);
 const router = createRouter({ routeTree });
 function App() {
@@ -43045,89 +43100,89 @@ ReactDOM.createRoot(document.getElementById("root")).render(
   /* @__PURE__ */ jsxRuntimeExports.jsx(QueryClientProvider, { client: queryClient, children: /* @__PURE__ */ jsxRuntimeExports.jsx(InternetIdentityProvider, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(App, {}) }) })
 );
 export {
-  pendingThenable as $,
-  AnimatePresence as A,
+  isV3ResponseBody as $,
+  Activity as A,
   Button as B,
   Check as C,
-  InvalidReadStateRequestErrorCode as D,
-  ExternalError as E,
-  ReadRequestType as F,
-  Principal$1 as G,
-  IDL as H,
-  InputError as I,
-  MissingCanisterIdErrorCode as J,
-  HttpAgent as K,
-  encode$2 as L,
-  MissingRootKeyErrorCode as M,
-  UncertifiedRejectErrorCode as N,
-  isV3ResponseBody as O,
+  lookupResultToBuffer as D,
+  ExternalLink as E,
+  RequestStatusDoneNoReplyErrorCode as F,
+  Gauge as G,
+  RejectError as H,
+  CertifiedRejectErrorCode as I,
+  UNREACHABLE_ERROR as J,
+  InputError as K,
+  Layers as L,
+  Moon as M,
+  InvalidReadStateRequestErrorCode as N,
+  ReadRequestType as O,
   ProtocolError as P,
-  QueryResponseStatus as Q,
-  React$4 as R,
+  Principal$1 as Q,
+  RequestStatusResponseStatus as R,
   Skeleton as S,
-  TimeoutWaitingForResponseErrorCode as T,
+  TrendingDown as T,
   UnknownError as U,
-  isV2ResponseBody as V,
-  UncertifiedRejectUpdateErrorCode as W,
-  UnexpectedErrorCode as X,
-  decode$2 as Y,
-  Zap as Z,
-  Subscribable as _,
-  reactDomExports as a,
-  resolveEnabled as a0,
-  shallowEqualObjects as a1,
-  resolveStaleTime as a2,
-  noop$7 as a3,
-  environmentManager as a4,
-  isValidTimeout as a5,
-  timeUntilStale as a6,
-  timeoutManager as a7,
-  focusManager as a8,
-  fetchState as a9,
-  replaceData as aa,
-  notifyManager as ab,
-  hashKey as ac,
-  getDefaultState as ad,
-  shouldThrowError as ae,
-  useInternetIdentity as af,
-  createActorWithConfig as ag,
-  composeRefs$1 as ah,
-  React$5 as ai,
-  ReactDOM$2 as aj,
-  Record as ak,
-  Variant as al,
-  Vec as am,
-  Service as an,
-  Func as ao,
-  Text as ap,
-  Principal2 as aq,
-  Int as ar,
+  IDL as V,
+  MissingCanisterIdErrorCode as W,
+  HttpAgent as X,
+  encode$2 as Y,
+  QueryResponseStatus as Z,
+  UncertifiedRejectErrorCode as _,
+  cn as a,
+  isV2ResponseBody as a0,
+  UncertifiedRejectUpdateErrorCode as a1,
+  UnexpectedErrorCode as a2,
+  decode$2 as a3,
+  pendingThenable as a4,
+  resolveEnabled as a5,
+  resolveStaleTime as a6,
+  environmentManager as a7,
+  isValidTimeout as a8,
+  timeUntilStale as a9,
+  timeoutManager as aa,
+  focusManager as ab,
+  fetchState as ac,
+  replaceData as ad,
+  hashKey as ae,
+  getDefaultState as af,
+  shouldThrowError as ag,
+  createActorWithConfig as ah,
+  Variant as ai,
+  Record as aj,
+  Vec as ak,
+  Service as al,
+  Func as am,
+  Text as an,
+  Opt as ao,
+  Null as ap,
+  Bool as aq,
+  Float64 as ar,
   Nat as as,
-  Float64 as at,
-  Bool as au,
-  cn as b,
+  Int as at,
+  Principal2 as au,
+  Copy as b,
   createLucideIcon as c,
-  Copy as d,
-  useNavigate as e,
-  useQueryClient as f,
-  useSearch as g,
-  buttonVariants as h,
-  createSlot as i,
+  Slot as d,
+  cva as e,
+  Link$1 as f,
+  ArrowRight as g,
+  Subscribable as h,
+  replaceEqualDeep$1 as i,
   jsxRuntimeExports as j,
-  commonjsGlobal as k,
-  getDefaultExportFromCjs as l,
+  noop$7 as k,
+  useInternetIdentity as l,
   motion as m,
-  clsx as n,
-  invariant$1 as o,
-  useParams as p,
-  utf8ToBytes as q,
+  notifyManager as n,
+  o,
+  useDarkMode as p,
+  Sun as q,
   reactExports as r,
-  Certificate as s,
-  lookupResultToBuffer as t,
-  useComposedRefs$1 as u,
-  RequestStatusResponseStatus as v,
-  RequestStatusDoneNoReplyErrorCode as w,
-  RejectError as x,
-  CertifiedRejectErrorCode as y,
-  UNREACHABLE_ERROR as z
+  shallowEqualObjects as s,
+  TimeoutWaitingForResponseErrorCode as t,
+  useQueryClient as u,
+  vt as v,
+  utf8ToBytes as w,
+  ExternalError as x,
+  MissingRootKeyErrorCode as y,
+  Certificate as z
 };

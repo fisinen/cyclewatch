@@ -16,10 +16,11 @@ import { Suspense, lazy } from "react";
 const DashboardPage = lazy(() =>
   import("./pages/DashboardPage").then((m) => ({ default: m.DashboardPage })),
 );
-const CanisterDetailPage = lazy(() =>
-  import("./pages/CanisterDetailPage").then((m) => ({
-    default: m.CanisterDetailPage,
-  })),
+const ActivityPage = lazy(() =>
+  import("./pages/ActivityPage").then((m) => ({ default: m.ActivityPage })),
+);
+const AccountPage = lazy(() =>
+  import("./pages/AccountPage").then((m) => ({ default: m.AccountPage })),
 );
 
 function PageLoader() {
@@ -28,9 +29,9 @@ function PageLoader() {
       <Skeleton className="h-8 w-48" />
       <Skeleton className="h-4 w-80" />
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-        <Skeleton className="h-32 rounded-xl" />
-        <Skeleton className="h-32 rounded-xl" />
-        <Skeleton className="h-32 rounded-xl" />
+        <Skeleton className="h-32 rounded-lg" />
+        <Skeleton className="h-32 rounded-lg" />
+        <Skeleton className="h-32 rounded-lg" />
       </div>
     </div>
   );
@@ -80,12 +81,22 @@ const dashboardRoute = createRoute({
   ),
 });
 
-const canisterDetailRoute = createRoute({
+const activityRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: "/canister/$canisterId",
+  path: "/activity",
   component: () => (
     <Suspense fallback={<PageLoader />}>
-      <CanisterDetailPage />
+      <ActivityPage />
+    </Suspense>
+  ),
+});
+
+const accountRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/account",
+  component: () => (
+    <Suspense fallback={<PageLoader />}>
+      <AccountPage />
     </Suspense>
   ),
 });
@@ -93,7 +104,8 @@ const canisterDetailRoute = createRoute({
 const routeTree = rootRoute.addChildren([
   indexRoute,
   dashboardRoute,
-  canisterDetailRoute,
+  activityRoute,
+  accountRoute,
 ]);
 
 const router = createRouter({ routeTree });
